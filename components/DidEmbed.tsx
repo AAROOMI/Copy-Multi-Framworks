@@ -11,7 +11,7 @@ export const DidEmbed: React.FC = () => {
       {!isLoaded && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50 z-10">
           <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-          <p className="text-sm font-medium">Connecting to Sarah Johnson...</p>
+          <p className="text-sm font-normal">Connecting to Sara...</p>
         </div>
       )}
       
@@ -42,7 +42,7 @@ export const DidEmbed: React.FC = () => {
             pointerEvents: 'auto', // Ensure clicks still work on the video/mic
           }}
           allow="microphone; camera; display-capture; autoplay; encrypted-media"
-          title="Sarah Johnson AI Agent"
+          title="Sara AI Agent"
         />
       </div>
       

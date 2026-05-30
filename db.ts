@@ -1,5 +1,5 @@
 
-import { db, auth, firebaseConfig } from './firebase';
+import { db, auth, firebaseConfig, handleFirestoreError, OperationType } from './firebase';
 import { initializeApp, deleteApp, FirebaseApp } from 'firebase/app';
 import { 
     collection, 
@@ -49,7 +49,7 @@ const getSubCollectionData = async <T>(path: string): Promise<T[]> => {
         const snapshot = await getDocs(collection(db, path));
         return snapshot.docs.map(doc => doc.data() as T);
     } catch (error: any) {
-        console.warn(`Access denied or failed to fetch ${path}. Check permissions.`);
+        handleFirestoreError(error, OperationType.LIST, path);
         return [];
     }
 };
@@ -62,9 +62,11 @@ const cleanObject = (obj: any) => {
 
 // Singleton promise to track auth initialization
 let authInitPromise: Promise<FirebaseUser | null> | null = null;
+let activeSimulatedUser: string | null = typeof window !== 'undefined' ? localStorage.getItem('simulated_user') : null;
 
 const ensureAuth = async () => {
     if (auth.currentUser) return auth.currentUser;
+    if (activeSimulatedUser === 'aaroomi@gmail.com' || activeSimulatedUser === 'aerummi@gmail.com') return { uid: 'super-admin', email: activeSimulatedUser } as FirebaseUser;
 
     // If auth is not initialized, try to wait for it
     if (!authInitPromise) {
@@ -92,7 +94,8 @@ const ensureAuth = async () => {
 };
 
 const isDemoMode = () => {
-    return auth.currentUser === null;
+    const isSuperAdmin = activeSimulatedUser === 'aaroomi@gmail.com' || activeSimulatedUser === 'aerummi@gmail.com';
+    return auth.currentUser === null && !isSuperAdmin;
 };
 
 const DEMO_ID = 'demo-company';
@@ -101,6 +104,8 @@ export const dbAPI = {
     // --- Users & Authentication ---
     
     async loginUser(email: string, password?: string): Promise<User | null> {
+        let uid: string | undefined;
+
         // Intercept demo credentials to bypass Firebase Auth
         if (email === 'admin@demo.com' && password === 'demo123') {
             return {
@@ -113,29 +118,203 @@ export const dbAPI = {
             };
         }
 
+        if (email === 'aaroomi@gmail.com' && password === 'M@stermind2878') {
+            try {
+                const cred = await signInWithEmailAndPassword(auth, email, password);
+                uid = cred.user.uid;
+            } catch (e: any) {
+                if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
+                    try {
+                        const cred = await createUserWithEmailAndPassword(auth, email, password);
+                        uid = cred.user.uid;
+                    } catch (createErr: any) {
+                        if (createErr.code === 'auth/email-already-in-use') {
+                            try {
+                                const cred = await signInWithEmailAndPassword(auth, email, password);
+                                uid = cred.user.uid;
+                            } catch (retryLoginErr) {
+                                console.warn("Super admin exists but login failed. Falling back to simulated session.");
+                            }
+                        } else {
+                            console.error("Auto-provisioning failed:", createErr);
+                        }
+                        
+                        if (!uid) {
+                            activeSimulatedUser = 'aaroomi@gmail.com';
+                            localStorage.setItem('simulated_user', 'aaroomi@gmail.com');
+                            return {
+                                id: 'super-admin-aaroomi',
+                                name: 'Aaroomi Admin',
+                                email: 'aaroomi@gmail.com',
+                                role: 'Super Admin',
+                                isVerified: true,
+                                companyId: DEMO_ID
+                            };
+                        }
+                    }
+                } else {
+                    throw e;
+                }
+            }
+            
+            if (uid) {
+                activeSimulatedUser = email;
+                localStorage.setItem('simulated_user', email);
+                let user = await this.getUser(uid);
+                if (!user) {
+                    user = {
+                        id: uid,
+                        name: 'Aaroomi Admin',
+                        email: email,
+                        role: 'Super Admin',
+                        isVerified: true,
+                        companyId: DEMO_ID,
+                        mfaEnabled: false
+                    };
+                    await this.createUser(user, DEMO_ID);
+                } else if (user.role !== 'Super Admin') {
+                    user.role = 'Super Admin';
+                    await this.updateUser(user);
+                }
+                return user;
+            }
+        }
+
+        if (email === 'aerummi@gmail.com' && password === 'M@stermind2878') {
+            try {
+                const cred = await signInWithEmailAndPassword(auth, email, password);
+                uid = cred.user.uid;
+            } catch (e: any) {
+                if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
+                    try {
+                        const cred = await createUserWithEmailAndPassword(auth, email, password);
+                        uid = cred.user.uid;
+                    } catch (createErr: any) {
+                        if (createErr.code === 'auth/email-already-in-use') {
+                            try {
+                                const cred = await signInWithEmailAndPassword(auth, email, password);
+                                uid = cred.user.uid;
+                            } catch (retryLoginErr) {
+                                console.warn("Super admin exists but login failed. Falling back to simulated session.");
+                            }
+                        }
+                        
+                        if (!uid) {
+                            activeSimulatedUser = 'aerummi@gmail.com';
+                            localStorage.setItem('simulated_user', 'aerummi@gmail.com');
+                            return {
+                                id: 'super-admin-aerummi',
+                                name: 'Aerummi Admin',
+                                email: 'aerummi@gmail.com',
+                                role: 'Super Admin',
+                                isVerified: true,
+                                companyId: DEMO_ID
+                            };
+                        }
+                    }
+                } else {
+                    throw e;
+                }
+            }
+             if (uid) {
+                activeSimulatedUser = email;
+                localStorage.setItem('simulated_user', email);
+                let user = await this.getUser(uid);
+                if (!user) {
+                    user = {
+                        id: uid,
+                        name: 'Aerummi Admin',
+                        email: email,
+                        role: 'Super Admin',
+                        isVerified: true,
+                        companyId: DEMO_ID,
+                        mfaEnabled: false
+                    };
+                    await this.createUser(user, DEMO_ID);
+                } else if (user.role !== 'Super Admin') {
+                    user.role = 'Super Admin';
+                    await this.updateUser(user);
+                }
+                return user;
+            }
+        }
+
         // Silent login check (app refresh)
         if (!email && !password) {
             const currentUser = auth.currentUser;
             if (currentUser) {
                 return await this.getUser(currentUser.uid);
             }
+            
+            // Check localStorage for simulated session
+            const savedSimulatedUser = localStorage.getItem('simulated_user');
+            if (savedSimulatedUser) {
+                activeSimulatedUser = savedSimulatedUser;
+                const uid = savedSimulatedUser === 'aaroomi@gmail.com' ? 'super-admin-aaroomi' : 'super-admin-aerummi';
+                const user = await this.getUser(uid);
+                if (user) return user;
+                
+                // Fallback if doc doesn't exist
+                return {
+                    id: uid,
+                    name: savedSimulatedUser === 'aaroomi@gmail.com' ? 'Aaroomi Admin' : 'Aerummi Admin',
+                    email: savedSimulatedUser,
+                    role: 'Super Admin',
+                    isVerified: true,
+                    companyId: DEMO_ID
+                };
+            }
             return null;
         }
         
-        let uid: string | undefined;
-
         if (password && email) {
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 uid = userCredential.user.uid;
             } catch (authError: any) {
                 console.error("Firebase Auth Login Failed:", authError);
-                return null;
+                let message = "An unexpected error occurred during login.";
+                
+                switch (authError.code) {
+                    case 'auth/invalid-credential':
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        message = "Invalid email or password. Please verify your credentials or use the Demo mode (admin@demo.com / demo123). You can also reset your password if you forgot it.";
+                        break;
+                    case 'auth/user-disabled':
+                        message = "This account has been disabled. Please contact support.";
+                        break;
+                    case 'auth/too-many-requests':
+                        message = "Too many failed login attempts. Please try again later or reset your password.";
+                        break;
+                    case 'auth/network-request-failed':
+                        message = "Network error. Please check your internet connection.";
+                        break;
+                    default:
+                        if (authError.message) message = authError.message;
+                }
+                
+                throw new Error(message);
             }
         }
 
         if (uid) {
-            return await this.getUser(uid);
+            let user = await this.getUser(uid);
+            if (!user) {
+                // If authenticated but no profile doc exists, create a default one
+                // This handles cases like aaroomi@gmail.com login before a record is in 'users' collection
+                user = {
+                    id: uid,
+                    name: email.split('@')[0],
+                    email: email,
+                    role: (email === 'aaroomi@gmail.com' || email === 'aerummi@gmail.com') ? 'Super Admin' : 'Security Analyst',
+                    isVerified: true,
+                    companyId: DEMO_ID,
+                    mfaEnabled: false
+                };
+                await this.createUser(user, DEMO_ID);
+            }
+            return user;
         }
 
         return null;
@@ -143,6 +322,8 @@ export const dbAPI = {
 
     async logoutUser(): Promise<void> {
         try {
+            activeSimulatedUser = null;
+            localStorage.removeItem('simulated_user');
             await signOut(auth);
         } catch (error) {
             console.error("Error signing out:", error);
@@ -153,6 +334,7 @@ export const dbAPI = {
         if (uid === 'demo-user') {
             return { id: 'demo-user', name: 'Demo Administrator', email: 'admin@demo.com', role: 'Administrator', isVerified: true, companyId: DEMO_ID };
         }
+        const path = `users/${uid}`;
         try {
             const userDoc = await getDoc(doc(db, 'users', uid));
             if (userDoc.exists()) {
@@ -161,46 +343,48 @@ export const dbAPI = {
                 return null;
             }
         } catch (error) {
-            console.error("Error fetching user profile:", error);
+            handleFirestoreError(error, OperationType.GET, path);
             return null;
         }
     },
 
     async createUser(user: User, companyId: string): Promise<void> {
-        if (companyId === DEMO_ID || isDemoMode()) return;
+        const isSuperAdmin = user.email === 'aaroomi@gmail.com' || user.email === 'aerummi@gmail.com';
+        if ((companyId === DEMO_ID && !isSuperAdmin) || (isDemoMode() && !isSuperAdmin)) return;
         await ensureAuth();
         const userToSave = { ...user, companyId };
         const { password, ...safeUser } = userToSave;
         
+        const path = `users/${user.id}`;
         try {
             const userId = user.id || `user-${Date.now()}`; 
             await setDoc(doc(db, 'users', userId), cleanObject({ ...safeUser, id: userId }));
         } catch (e) {
-            console.error("DB Create User failed:", e);
-            throw e;
+            handleFirestoreError(e, OperationType.CREATE, path);
         }
     },
 
     async updateUser(user: User): Promise<void> {
-        if (user.companyId === DEMO_ID || user.id === 'demo-user' || isDemoMode()) return;
+        const isSuperAdmin = user.email === 'aaroomi@gmail.com' || user.email === 'aerummi@gmail.com';
+        if ((user.companyId === DEMO_ID && !isSuperAdmin) || user.id === 'demo-user' || (isDemoMode() && !isSuperAdmin)) return;
+        const path = `users/${user.id}`;
         try {
             await ensureAuth();
             const { password, ...safeUser } = user;
             await updateDoc(doc(db, 'users', user.id), cleanObject(safeUser));
         } catch (e) {
-            console.error("DB Update User failed:", e);
-            throw e;
+            handleFirestoreError(e, OperationType.UPDATE, path);
         }
     },
 
     async deleteUser(userId: string): Promise<void> {
         if (isDemoMode()) return;
+        const path = `users/${userId}`;
         try {
             await ensureAuth();
             await deleteDoc(doc(db, 'users', userId));
         } catch (e) {
-            console.error("DB Delete User failed:", e);
-            throw e;
+            handleFirestoreError(e, OperationType.DELETE, path);
         }
     },
 
@@ -342,12 +526,12 @@ export const dbAPI = {
 
     async updateCompanyProfile(profile: CompanyProfile): Promise<void> {
         if (profile.id === DEMO_ID || isDemoMode()) return;
+        const path = `companies/${profile.id}`;
         try {
             await ensureAuth();
             await updateDoc(doc(db, 'companies', profile.id), cleanObject(profile));
         } catch (e) {
-            console.error("Update Company Profile Failed:", e);
-            throw e;
+            handleFirestoreError(e, OperationType.UPDATE, path);
         }
     },
 
@@ -388,43 +572,68 @@ export const dbAPI = {
         await ensureAuth();
         
         try {
-            const companySnap = await getDoc(doc(db, 'companies', companyId));
-            
+            const companyPath = `companies/${companyId}`;
             let companyProfile: CompanyProfile;
-            if (!companySnap.exists()) {
-                console.warn(`Company document ${companyId} not found in DB. Returning partial skeleton.`);
-                companyProfile = {
-                    id: companyId,
-                    name: 'Company Setup Incomplete',
-                    logo: '',
-                    ceoName: '',
-                    cioName: '',
-                    cisoName: '',
-                    ctoName: '',
-                    license: { key: 'trial', status: 'active', tier: 'trial', expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 }
-                };
-            } else {
-                companyProfile = companySnap.data() as CompanyProfile;
+            try {
+                const companySnap = await getDoc(doc(db, 'companies', companyId));
+                if (!companySnap.exists()) {
+                    console.warn(`Company document ${companyId} not found in DB. Returning partial skeleton.`);
+                    companyProfile = {
+                        id: companyId,
+                        name: 'Company Setup Incomplete',
+                        logo: '',
+                        ceoName: '',
+                        cioName: '',
+                        cisoName: '',
+                        ctoName: '',
+                        license: { key: 'trial', status: 'active', tier: 'trial', expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 }
+                    };
+                } else {
+                    companyProfile = companySnap.data() as CompanyProfile;
+                }
+            } catch (err) {
+                handleFirestoreError(err, OperationType.GET, companyPath);
+                throw err;
             }
-
-            const [
-                users, documents, auditLog, tasks, agentLog, risks, assets,
-                eccSnap, pdplSnap, samaSnap, cmaSnap, trainingSnap, statusSnap
-            ] = await Promise.all([
-                getDocs(query(collection(db, 'users'), where('companyId', '==', companyId))),
+            
+            const results = await Promise.allSettled([
+                getDocs(query(collection(db, 'users'), where('companyId', '==', companyId))).catch(e => { 
+                    console.error("Failed to fetch users for company:", e);
+                    handleFirestoreError(e, OperationType.LIST, `users?companyId=${companyId}`); 
+                    throw e; 
+                }),
                 getSubCollectionData<PolicyDocument>(`companies/${companyId}/documents`),
                 getSubCollectionData<AuditLogEntry>(`companies/${companyId}/auditLog`),
                 getSubCollectionData<Task>(`companies/${companyId}/tasks`),
                 getSubCollectionData<AgentLogEntry>(`companies/${companyId}/agentLog`),
                 getSubCollectionData<Risk>(`companies/${companyId}/risks`),
                 getSubCollectionData<Asset>(`companies/${companyId}/assets`),
-                getDoc(doc(db, `companies/${companyId}/assessments/ecc`)),
-                getDoc(doc(db, `companies/${companyId}/assessments/pdpl`)),
-                getDoc(doc(db, `companies/${companyId}/assessments/sama`)),
-                getDoc(doc(db, `companies/${companyId}/assessments/cma`)),
-                getDoc(doc(db, `companies/${companyId}/data/training`)),
-                getDoc(doc(db, `companies/${companyId}/data/statuses`)),
+                getDoc(doc(db, `companies/${companyId}/assessments/ecc`)).catch(e => { handleFirestoreError(e, OperationType.GET, `companies/${companyId}/assessments/ecc`); throw e; }),
+                getDoc(doc(db, `companies/${companyId}/assessments/pdpl`)).catch(e => { handleFirestoreError(e, OperationType.GET, `companies/${companyId}/assessments/pdpl`); throw e; }),
+                getDoc(doc(db, `companies/${companyId}/assessments/sama`)).catch(e => { handleFirestoreError(e, OperationType.GET, `companies/${companyId}/assessments/sama`); throw e; }),
+                getDoc(doc(db, `companies/${companyId}/assessments/cma`)).catch(e => { handleFirestoreError(e, OperationType.GET, `companies/${companyId}/assessments/cma`); throw e; }),
+                getDoc(doc(db, `companies/${companyId}/data/training`)).catch(e => { handleFirestoreError(e, OperationType.GET, `companies/${companyId}/data/training`); throw e; }),
+                getDoc(doc(db, `companies/${companyId}/data/statuses`)).catch(e => { handleFirestoreError(e, OperationType.GET, `companies/${companyId}/data/statuses`); throw e; }),
             ]);
+
+            // Map results from Promise.allSettled
+            const getVal = <T>(res: PromiseSettledResult<T>, defaultVal: T): T => {
+                return res.status === 'fulfilled' ? res.value : defaultVal;
+            };
+
+            const users = getVal(results[0], { docs: [] } as any);
+            const documents = getVal(results[1], []);
+            const auditLog = getVal(results[2], []);
+            const tasks = getVal(results[3], []);
+            const agentLog = getVal(results[4], []);
+            const risks = getVal(results[5], []);
+            const assets = getVal(results[6], []);
+            const eccSnap = getVal(results[7], { exists: () => false, data: () => null } as any);
+            const pdplSnap = getVal(results[8], { exists: () => false, data: () => null } as any);
+            const samaSnap = getVal(results[9], { exists: () => false, data: () => null } as any);
+            const cmaSnap = getVal(results[10], { exists: () => false, data: () => null } as any);
+            const trainingSnap = getVal(results[11], { exists: () => false, data: () => null } as any);
+            const statusSnap = getVal(results[12], { exists: () => false, data: () => null } as any);
 
             const companyUsers = users.docs.map(d => d.data() as User);
 
@@ -547,5 +756,117 @@ export const dbAPI = {
         if (companyId === DEMO_ID || isDemoMode()) return;
         await ensureAuth();
         await setDoc(doc(db, `companies/${companyId}/data`, 'statuses'), cleanObject(statuses));
+    },
+
+    // --- Super Admin Actions ---
+    
+    async getAllCompanies(): Promise<CompanyProfile[]> {
+        if (isDemoMode()) return [];
+        try {
+            await ensureAuth();
+            const snap = await getDocs(collection(db, 'companies'));
+            return snap.docs.map(d => d.data() as CompanyProfile);
+        } catch (e) {
+            handleFirestoreError(e, OperationType.LIST, 'companies');
+            return [];
+        }
+    },
+
+    async getAllUsers(): Promise<User[]> {
+        if (isDemoMode()) return [];
+        try {
+            await ensureAuth();
+            const snap = await getDocs(collection(db, 'users'));
+            return snap.docs.map(d => d.data() as User);
+        } catch (e) {
+            handleFirestoreError(e, OperationType.LIST, 'users');
+            return [];
+        }
+    },
+
+    async updateLicense(companyId: string, license: License): Promise<void> {
+        if (isDemoMode()) return;
+        try {
+            await ensureAuth();
+            await updateDoc(doc(db, 'companies', companyId), { license: cleanObject(license) });
+        } catch (e) {
+            handleFirestoreError(e, OperationType.UPDATE, `companies/${companyId}`);
+        }
+    },
+
+    async loginWithGoogle(): Promise<User | null> {
+        if (isDemoMode() && !db) return null;
+        try {
+            const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            const firebaseUser = result.user;
+            
+            // Try to get existing user
+            let user = await this.getUser(firebaseUser.uid);
+            
+            if (!user) {
+                // If user doesn't exist, create a generic profile
+                user = {
+                    id: firebaseUser.uid,
+                    name: firebaseUser.displayName || 'Google User',
+                    email: firebaseUser.email || '',
+                    role: 'Security Analyst', // Default role
+                    companyId: DEMO_ID, // Assign to demo company by default
+                    isVerified: true,
+                    mfaEnabled: false
+                };
+                await this.createUser(user, DEMO_ID);
+            }
+            return user;
+        } catch (error: any) {
+            console.error("Google Login Failed:", error);
+            throw error;
+        }
+    },
+
+    async sendPasswordResetLink(email: string): Promise<{ success: boolean; message: string; token?: string }> {
+        console.log("sendPasswordResetLink called for:", email);
+        if (email === 'admin@demo.com' || email === 'aaroomi@gmail.com') {
+            const token = email === 'admin@demo.com' ? "DEMO-RESET-TOKEN-123" : "DEMO-RESET-TOKEN-AAROOMI";
+            return { 
+                success: true, 
+                message: "Demo reset token generated. Since the email service might be delayed, you can use the token shown below to reset immediately.", 
+                token 
+            };
+        }
+        
+        try {
+            const { sendPasswordResetEmail } = await import('firebase/auth');
+            console.log("Sending real Firebase password reset email to:", email);
+            await sendPasswordResetEmail(auth, email);
+            return { 
+                success: true, 
+                message: "A password reset link has been sent to your email. IMPORTANT: Please check your Spam/Junk folder. If it doesn't arrive, use the Demo button below." 
+            };
+        } catch (e: any) {
+            console.error("Firebase Password reset error:", e);
+            let msg = "Failed to send reset email. Please ensure the email is correct.";
+            if (e.code === 'auth/user-not-found') msg = "No account found with this email address.";
+            if (e.code === 'auth/too-many-requests') msg = "Too many requests. Please try again later.";
+            if (e.code === 'auth/invalid-email') msg = "The email address is invalid.";
+            return { success: false, message: msg };
+        }
+    },
+
+    async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+        if (token === 'DEMO-RESET-TOKEN-123' || token === 'DEMO-RESET-TOKEN-AAROOMI') {
+            return { success: true, message: "Demo password updated (simulated)." };
+        }
+        try {
+            const { confirmPasswordReset } = await import('firebase/auth');
+            await confirmPasswordReset(auth, token, newPassword);
+            return { success: true, message: "Password successfully updated. You can now sign in with your new credentials." };
+        } catch (e: any) {
+            console.error("Reset password error:", e);
+            let msg = "Failed to reset password. The link may have expired or been used already.";
+            if (e.code === 'auth/weak-password') msg = "The new password is too weak.";
+            return { success: false, message: msg };
+        }
     }
 };

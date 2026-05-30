@@ -1,0 +1,273 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a user in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the user (UID)." },
+        "name": { "type": "string", "description": "Full name of the user." },
+        "email": { "type": "string", "format": "email", "description": "Email address of the user." },
+        "role": { "type": "string", "enum": ["Administrator", "CISO", "CTO", "CIO", "CEO", "Security Analyst", "Employee"], "description": "Role of the user for RBAC." },
+        "isVerified": { "type": "boolean", "description": "Whether the user's email is verified." },
+        "companyId": { "type": "string", "description": "ID of the company the user belongs to." },
+        "mfaEnabled": { "type": "boolean", "description": "Whether MFA is enabled for the user." }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "Agent": {
+      "title": "Agent Registry",
+      "description": "Registry of AI agents in the system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["Orchestrator", "DPO", "Security", "Auditor", "Compliance"] },
+        "systemPrompt": { "type": "string" },
+        "version": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "name", "type", "isActive"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Voice or text conversation between user and system.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "channel": { "type": "string", "enum": ["voice", "chat"] },
+        "startedAt": { "type": "number" },
+        "endedAt": { "type": "number" },
+        "companyId": { "type": "string" }
+      },
+      "required": ["id", "userId", "channel", "startedAt", "companyId"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Individual message in a conversation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "sender": { "type": "string", "enum": ["user", "agent"] },
+        "agentId": { "type": "string" },
+        "text": { "type": "string" },
+        "metadata": { "type": "object" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "conversationId", "sender", "text", "createdAt"]
+    },
+    "AgentDecision": {
+      "title": "Agent Decision",
+      "description": "Core intelligence log of an agent's decision.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "agentId": { "type": "string" },
+        "input": { "type": "string" },
+        "output": { "type": "string" },
+        "riskLevel": { "type": "string", "enum": ["low", "medium", "high"] },
+        "complianceStatus": { "type": "string", "enum": ["compliant", "non-compliant", "undetermined"] },
+        "confidence": { "type": "number" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "conversationId", "agentId", "riskLevel", "complianceStatus"]
+    },
+    "Policy": {
+      "title": "Policy GRC Engine",
+      "description": "Rules and policies enforced by the compliance engine.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["PDPL", "Security", "Compliance", "SAMA", "CMA", "ECC"] },
+        "rule": { "type": "object" },
+        "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "name", "category", "rule"]
+    },
+    "NFAAction": {
+      "title": "Next Follow-up Action",
+      "description": "Actions required to reach compliance.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "decisionId": { "type": "string" },
+        "action": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "status": { "type": "string", "enum": ["open", "in_progress", "done"] },
+        "assignedTo": { "type": "string" },
+        "dueDate": { "type": "number" }
+      },
+      "required": ["id", "action", "priority", "status"]
+    },
+    "VoiceSession": {
+      "title": "Voice Session",
+      "description": "Audio data and processing metadata.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "transcript": { "type": "string" },
+        "language": { "type": "string" },
+        "confidence": { "type": "number" }
+      },
+      "required": ["id", "conversationId", "audioUrl"]
+    },
+    "CompanyProfile": {
+      "title": "Company Profile",
+      "description": "Represents a company's profile and settings.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the company." },
+        "name": { "type": "string", "description": "Name of the company." },
+        "logo": { "type": "string", "description": "Base64 encoded logo image." },
+        "ceoName": { "type": "string" },
+        "cioName": { "type": "string" },
+        "cisoName": { "type": "string" },
+        "ctoName": { "type": "string" },
+        "ownerId": { "type": "string", "description": "UID of the user who owns this company profile." },
+        "admins": { "type": "array", "items": { "type": "string" }, "description": "List of user UIDs who are admins for this company." }
+      },
+      "required": ["id", "name", "ownerId"]
+    },
+    "AuditLogEntry": {
+      "title": "Audit Log Entry",
+      "description": "A single entry in the security audit log.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "companyId": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "userId", "action", "companyId"]
+    },
+    "PolicyDocument": {
+      "title": "Policy Document",
+      "description": "A generated or uploaded policy document.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "controlId": { "type": "string" },
+        "domainName": { "type": "string" },
+        "status": { "type": "string" },
+        "content": { "type": "object" },
+        "companyId": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["id", "controlId", "status", "companyId"]
+    },
+    "AssessmentItem": {
+      "title": "Assessment Item",
+      "description": "A single control assessment result.",
+      "type": "object",
+      "properties": {
+        "controlCode": { "type": "string" },
+        "controlName": { "type": "string" },
+        "controlStatus": { "type": "string" },
+        "currentStatusDescription": { "type": "string" },
+        "managementResponse": { "type": "string" },
+        "companyId": { "type": "string" },
+        "assessmentType": { "type": "string", "enum": ["ecc", "pdpl", "sama", "cma"] }
+      },
+      "required": ["controlCode", "controlStatus", "companyId", "assessmentType"]
+    },
+    "Risk": {
+      "title": "Risk",
+      "description": "A risk entry in the risk register.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "owner": { "type": "string" },
+        "inherentScore": { "type": "number" },
+        "residualScore": { "type": "number" },
+        "companyId": { "type": "string" }
+      },
+      "required": ["id", "title", "companyId"]
+    },
+    "Asset": {
+      "title": "Asset",
+      "description": "An asset in the inventory.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "criticality": { "type": "string" },
+        "companyId": { "type": "string" }
+      },
+      "required": ["id", "name", "companyId"]
+    }
+  },
+  "firestore": {
+    "/agents/{agentId}": {
+      "schema": "Agent",
+      "description": "Agent registry entries."
+    },
+    "/policies/{policyId}": {
+      "schema": "Policy",
+      "description": "GRC engine policies."
+    },
+    "/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Conversation sessions."
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Messages in a conversation."
+    },
+    "/conversations/{conversationId}/decisions/{decisionId}": {
+      "schema": "AgentDecision",
+      "description": "Decisions logged for a conversation."
+    },
+    "/conversations/{conversationId}/voiceSessions/{sessionId}": {
+      "schema": "VoiceSession",
+      "description": "Voice processing data."
+    },
+    "/conversations/{conversationId}/nfaActions/{actionId}": {
+      "schema": "NFAAction",
+      "description": "Follow-up actions derived from decisions."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile data."
+    },
+    "/companies/{companyId}": {
+      "schema": "CompanyProfile",
+      "description": "Company profile and settings."
+    },
+    "/companies/{companyId}/auditLogs/{logId}": {
+      "schema": "AuditLogEntry",
+      "description": "Audit logs for a specific company."
+    },
+    "/companies/{companyId}/documents/{docId}": {
+      "schema": "PolicyDocument",
+      "description": "Policy documents for a specific company."
+    },
+    "/companies/{companyId}/assessments/{assessmentId}": {
+      "schema": "AssessmentItem",
+      "description": "Assessment items for a specific company."
+    },
+    "/companies/{companyId}/risks/{riskId}": {
+      "schema": "Risk",
+      "description": "Risk register for a specific company."
+    },
+    "/companies/{companyId}/assets/{assetId}": {
+      "schema": "Asset",
+      "description": "Asset inventory for a specific company."
+    }
+  }
+}

@@ -11,7 +11,7 @@ interface UserProfilePageProps {
 
 const InfoCard: React.FC<{ label: string; value: string }> = ({ label, value }) => (
     <div>
-        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</dt>
+        <dt className="text-sm font-normal text-gray-500 dark:text-gray-400">{label}</dt>
         <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100">{value}</dd>
     </div>
 );
@@ -19,7 +19,7 @@ const InfoCard: React.FC<{ label: string; value: string }> = ({ label, value }) 
 const Section: React.FC<{ title: string; description: string; children: React.ReactNode }> = ({ title, description, children }) => (
     <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100">{title}</h3>
+            <h3 className="text-base font-normal leading-6 text-gray-900 dark:text-gray-100">{title}</h3>
             <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">{description}</p>
             <div className="mt-6">
                 {children}
@@ -75,8 +75,8 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({ currentUser, o
     return (
         <div className="space-y-8 max-w-4xl mx-auto">
             <div>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">My Profile</h1>
-                <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">View your personal information and manage your account security settings.</p>
+                <h1 className="text-lg font-normal text-gray-800 dark:text-gray-100 tracking-tight">My Profile</h1>
+                <p className="mt-2 text-base text-gray-500 dark:text-gray-400">View your personal information and manage your account security settings.</p>
             </div>
             
             <Section title="Profile Information" description="Your personal details. Please contact an administrator to change this information.">
@@ -91,7 +91,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({ currentUser, o
             <Section title="Change Password" description="Update your password regularly to keep your account secure.">
                 <form onSubmit={handlePasswordChange} className="space-y-4 max-w-sm">
                     <div>
-                        <label htmlFor="current-password" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-300">Current Password</label>
+                        <label htmlFor="current-password" className="block text-sm font-normal leading-6 text-gray-900 dark:text-gray-300">Current Password</label>
                         <div className="relative mt-1">
                             <input type={showCurrentPassword ? 'text' : 'password'} id="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required className="block w-full input-style pr-10" />
                             <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
@@ -100,7 +100,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({ currentUser, o
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="new-password" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-300">New Password</label>
+                        <label htmlFor="new-password" className="block text-sm font-normal leading-6 text-gray-900 dark:text-gray-300">New Password</label>
                          <div className="relative mt-1">
                             <input type={showNewPassword ? 'text' : 'password'} id="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required className="block w-full input-style pr-10" />
                             <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
@@ -109,7 +109,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({ currentUser, o
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="confirm-password" className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-300">Confirm New Password</label>
+                        <label htmlFor="confirm-password" className="block text-sm font-normal leading-6 text-gray-900 dark:text-gray-300">Confirm New Password</label>
                          <div className="relative mt-1">
                             <input type={showConfirmPassword ? 'text' : 'password'} id="confirm-password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="block w-full input-style pr-10" />
                             <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
@@ -123,7 +123,7 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({ currentUser, o
                     )}
                     
                     <div className="pt-2">
-                        <button type="submit" className="inline-flex justify-center rounded-md bg-teal-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500">
+                        <button type="submit" className="inline-flex justify-center rounded-md bg-teal-600 px-3 py-2 text-sm font-normal text-white shadow-sm hover:bg-teal-500">
                             Update Password
                         </button>
                     </div>
@@ -133,19 +133,19 @@ export const UserProfilePage: React.FC<UserProfilePageProps> = ({ currentUser, o
             <Section title="Multi-Factor Authentication (MFA)" description="Add an extra layer of security to your account by requiring a second verification step when you sign in.">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            Status: <span className={`font-semibold ${currentUser.mfaEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        <p className="text-sm font-normal text-gray-900 dark:text-gray-100">
+                            Status: <span className={`font-normal ${currentUser.mfaEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                 {currentUser.mfaEnabled ? 'Enabled' : 'Disabled'}
                             </span>
                         </p>
                     </div>
                     <div>
                         {currentUser.mfaEnabled ? (
-                            <button onClick={handleDisableMfaClick} className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">
+                            <button onClick={handleDisableMfaClick} className="rounded-md bg-red-600 px-3 py-2 text-sm font-normal text-white shadow-sm hover:bg-red-500">
                                 Disable MFA
                             </button>
                         ) : (
-                            <button onClick={onEnableMfa} className="rounded-md bg-teal-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500">
+                            <button onClick={onEnableMfa} className="rounded-md bg-teal-600 px-3 py-2 text-sm font-normal text-white shadow-sm hover:bg-teal-500">
                                 Enable MFA
                             </button>
                         )}

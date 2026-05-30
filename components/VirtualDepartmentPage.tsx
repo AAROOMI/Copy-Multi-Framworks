@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
+import { AIService } from '../services/aiService';
 import { virtualAgents } from '../data/virtualAgents';
 import type { OrganizationSize, VirtualAgent, Risk, PolicyDocument, AssessmentItem, AuditAction } from '../types';
 import { UserGroupIcon, ShieldCheckIcon, SparklesIcon, MicrophoneIcon, ChatBotIcon, UploadIcon, PaperClipIcon, CloseIcon, DocumentTextIcon, EyeIcon } from './Icons';
@@ -17,7 +18,7 @@ interface VirtualDepartmentPageProps {
     onAddAuditLog?: (action: AuditAction, details: string) => void;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const DialogueDialogueEntry = null; // Removing the old ai constant
 
 // Define the simulated dialogue entry
 interface DialogueEntry {
@@ -124,22 +125,37 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
         const utterance = new SpeechSynthesisUtterance(text);
         const voices = window.speechSynthesis.getVoices();
         
-        // Simple voice mapping based on agent ID logic
-        // Ahmed/Fahad/Mohammed/Ibrahim/Asaad/Abdullah -> Male voices
-        // Sarah (Not in list but usually female)
-        
-        // Try to find distinct voices. This is browser dependent.
-        let voice = voices.find(v => v.lang.includes('en')); 
-        
-        if (speaker.includes("Ahmed")) { utterance.pitch = 0.8; utterance.rate = 0.9; } // Authority
-        else if (speaker.includes("Fahad")) { utterance.pitch = 1.0; utterance.rate = 1.1; } // Tech/Fast
-        else if (speaker.includes("Abdullah")) { utterance.pitch = 0.9; utterance.rate = 1.0; } // Auditor
-        else if (speaker.includes("Noora")) { 
-             voice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google US English'));
-             utterance.pitch = 1.1; 
+        // Comprehensive natural voice selection
+        const getBestVoice = (isMale: boolean) => {
+            const preferredKeywords = isMale 
+                ? ['Natural', 'Premium', 'Google US English', 'Male', 'Guy', 'David', 'Mark'] 
+                : ['Natural', 'Premium', 'Google US English', 'Female', 'Zira', 'Samantha', 'Microsoft Maria'];
+            
+            for (const keyword of preferredKeywords) {
+                const voice = voices.find(v => v.name.includes(keyword) && v.lang.startsWith('en'));
+                if (voice) return voice;
+            }
+            return voices.find(v => v.lang.startsWith('en'));
+        };
+
+        let selectedVoice;
+
+        if (speaker.includes("Ahmed") || speaker.includes("Fahad") || speaker.includes("Mohammed")) {
+             // Male voices
+             selectedVoice = getBestVoice(true);
+             utterance.pitch = speaker.includes("Ahmed") ? 0.8 : 1.0; // Deep voice for CISO
+             utterance.rate = 0.9; // Slightly slower for authoritative feel
+        } else {
+             // Female voices
+             selectedVoice = getBestVoice(false);
+             utterance.pitch = 1.05;
+             utterance.rate = 1.0;
         }
 
-        if (voice) utterance.voice = voice;
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        }
+        
         window.speechSynthesis.speak(utterance);
     };
 
@@ -158,6 +174,12 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
     };
 
     // --- Simulation Logic ---
+
+    // Optimized JSON extractor
+    const extractJson = (text: string) => {
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        return jsonMatch ? jsonMatch[0] : text;
+    };
 
     const runSimulationTurn = async (userContext?: string, analysisContext?: string) => {
         setIsThinking(true);
@@ -193,21 +215,17 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
             
             **Output Format:**
             JSON ARRAY of objects:
-            [{ "speaker": "Name", "message_en": "...", "message_ar": "...", "action": { ... } }]
+            [{ "speaker": "Name", "message_en": "...", "message_ar": "...", "action": { "type": "create_doc", "title": "...", "category": "..." } }]
             
-            Supported Actions: "create_doc", "assess_risk".
+            Supported Action Types: "create_doc", "assess_risk".
             `;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: specificInstruction,
-                config: {
-                    systemInstruction: systemInstruction,
-                    responseMimeType: "application/json"
-                }
+            const scriptResponse = await AIService.generateContent(specificInstruction, {
+                model: 'gemini-2.0-flash',
+                systemInstruction: systemInstruction,
             });
 
-            const script = JSON.parse(response.text || '[]');
+            const script = JSON.parse(extractJson(scriptResponse) || '[]');
 
             // Process script
             for (const line of script) {
@@ -318,17 +336,10 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
             Provide a concise summary of the analysis to be fed into the meeting simulation.
             `;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: {
-                    parts: [
-                        { inlineData: { mimeType: mimeType || 'image/png', data: base64Data } },
-                        { text: prompt }
-                    ]
-                }
+            const analysisResult = await AIService.generateContent(prompt, {
+                model: 'gemini-2.0-flash',
+                image: { data: base64Data, mimeType: mimeType || 'image/png' }
             });
-
-            const analysisResult = response.text || "Analysis complete.";
             
             // Feed this context into the simulation loop
             await runSimulationTurn(undefined, analysisResult);
@@ -354,12 +365,7 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
         const logText = meetingLog.map(entry => `${entry.speaker}: ${entry.message_en} ${entry.action ? `[Action: ${entry.action}]` : ''}`).join('\n');
         
         try {
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: `Generate a formal Minutes of Meeting (MOM) document based on this transcript:\n\n${logText}\n\nInclude: Date, Attendees (Agents & User), Key Discussion Points, Decisions Made, and Action Items. Format as Markdown.`,
-            });
-            
-            const momContent = response.text || "MOM Generation Failed";
+            const momContent = await AIService.generateContent(`Generate a formal Minutes of Meeting (MOM) document based on this transcript:\n\n${logText}\n\nInclude: Date, Attendees (Agents & User), Key Discussion Points, Decisions Made, and Action Items. Format as Markdown.`);
             
             if (onAddDocument) {
                 const momDoc: PolicyDocument = {
@@ -403,17 +409,17 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                        <UserGroupIcon className="w-10 h-10 text-teal-600" />
+                    <h1 className="text-xl font-normal text-gray-900 dark:text-white flex items-center gap-2">
+                        <UserGroupIcon className="w-6 h-6 text-teal-600" />
                         Virtual GRC & Cybersecurity Department
                     </h1>
-                    <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                         Your dedicated AI-powered security team, orchestrated by Noora.
                     </p>
                 </div>
                 
                 <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Org Size:</span>
+                    <span className="text-sm font-normal text-gray-600 dark:text-gray-300">Org Size:</span>
                     <select 
                         value={orgSize} 
                         onChange={(e) => setOrgSize(e.target.value as OrganizationSize)}
@@ -443,9 +449,9 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                             runSimulationTurn();
                         }
                     }}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold shadow-lg transition-all ${
+                    className={`flex items-center gap-2 px-6 py-2 rounded-full font-normal shadow-lg transition-all ${
                         isLiveMode 
-                        ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                        ? 'bg-red-500 hover:bg-red-600 text-white' 
                         : 'bg-green-600 hover:bg-green-700 text-white'
                     }`}
                 >
@@ -469,7 +475,7 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                     {/* Discussion Log */}
                     <div className="lg:col-span-3 bg-gray-900 rounded-xl shadow-2xl border border-gray-700 flex flex-col h-[600px]">
                         <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800 rounded-t-xl">
-                            <h3 className="text-white font-bold flex items-center gap-2">
+                            <h3 className="text-white font-normal flex items-center gap-2">
                                 <span className="h-2 w-2 bg-green-500 rounded-full"></span>
                                 Strategic Alignment Meeting - Live
                             </h3>
@@ -492,14 +498,14 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                                             {agent ? (
                                                 <img src={agent.avatarUrl} className="w-10 h-10 rounded-full border border-gray-600" alt={entry.speaker} />
                                             ) : isUser ? (
-                                                <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center text-white font-bold">U</div>
+                                                <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center text-white font-normal">U</div>
                                             ) : (
                                                 <div className="w-10 h-10 bg-gray-700 rounded-full"></div>
                                             )}
                                         </div>
                                         <div className={`flex-grow max-w-[80%] ${isUser ? 'text-right' : ''}`}>
                                             <div className={`flex items-baseline justify-between ${isUser ? 'flex-row-reverse' : ''}`}>
-                                                <span className="font-bold text-teal-400 text-sm">{entry.speaker}</span>
+                                                <span className="font-normal text-teal-400 text-sm">{entry.speaker}</span>
                                                 <span className="text-xs text-gray-500 mx-2">{new Date(entry.timestamp).toLocaleTimeString()}</span>
                                             </div>
                                             <div className={`mt-1 p-3 rounded-lg ${isUser ? 'bg-teal-900/50 border border-teal-700' : 'bg-gray-800 border border-gray-700'}`}>
@@ -579,7 +585,7 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                                     <div className="flex items-center gap-3">
                                         <img src={agent.avatarUrl} className="w-8 h-8 rounded-full" alt={agent.name} />
                                         <div>
-                                            <p className={`text-xs font-bold ${isSpeaking ? 'text-teal-300' : 'text-gray-700 dark:text-gray-300'}`}>{agent.name}</p>
+                                            <p className={`text-xs font-normal ${isSpeaking ? 'text-teal-300' : 'text-gray-700 dark:text-gray-300'}`}>{agent.name}</p>
                                             <p className="text-[10px] text-gray-500">{agent.role}</p>
                                         </div>
                                         {isSpeaking && (
@@ -597,7 +603,7 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                         {/* Upload Status Card */}
                         {uploadedFile && (
                             <div className="p-3 rounded-lg border border-purple-500 bg-purple-900/20 mt-4">
-                                <p className="text-xs font-bold text-purple-300 flex items-center gap-2">
+                                <p className="text-xs font-normal text-purple-300 flex items-center gap-2">
                                     <DocumentTextIcon className="w-3 h-3"/>
                                     Analyzing File
                                 </p>
@@ -625,12 +631,12 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                                     <div className="relative">
                                         <img src={agent.avatarUrl} alt={agent.name} className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-md" />
                                         {agent.id === 'agent-abdullah' && (
-                                            <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-pulse border border-white">CNN ACTIVE</div>
+                                            <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[9px] font-normal px-1.5 py-0.5 rounded-full animate-pulse border border-white">CNN ACTIVE</div>
                                         )}
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-lg text-gray-900 dark:text-white">{agent.name}</h3>
-                                        <p className="text-sm font-medium text-teal-600 dark:text-teal-400">{agent.title}</p>
+                                        <h3 className="font-normal text-base text-gray-900 dark:text-white">{agent.name}</h3>
+                                        <p className="text-sm font-normal text-teal-600 dark:text-teal-400">{agent.title}</p>
                                     </div>
                                 </div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">{agent.description}</p>
@@ -645,13 +651,13 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                                 </div>
                             </div>
                             <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
-                                <span className="text-xs text-gray-500">Reports to: <span className="font-semibold">{agent.reportingLine}</span></span>
+                                <span className="text-xs text-gray-500">Reports to: <span className="font-normal">{agent.reportingLine}</span></span>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onConsultAgent(agent);
                                     }}
-                                    className="flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 transition-colors"
+                                    className="flex items-center gap-1 text-xs font-normal text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 transition-colors"
                                 >
                                     <MicrophoneIcon className="w-3 h-3" />
                                     Consult
@@ -659,7 +665,7 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                             </div>
                             {agent.currentTask && (
                                 <div className="bg-yellow-50 dark:bg-yellow-900/30 px-6 py-2 border-t border-yellow-100 dark:border-yellow-900/50">
-                                    <p className="text-xs text-yellow-700 dark:text-yellow-400 font-medium truncate">
+                                    <p className="text-xs text-yellow-700 dark:text-yellow-400 font-normal truncate">
                                         <span className="animate-pulse mr-2">●</span>
                                         Working on: {agent.currentTask}
                                     </p>
@@ -676,10 +682,10 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                         <div className="flex items-center gap-4">
                              <img src={selectedAgent.avatarUrl} alt={selectedAgent.name} className="w-20 h-20 rounded-full object-cover border-2 border-teal-500 shadow-md" />
                              <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                <h2 className="text-lg font-normal text-gray-900 dark:text-white">
                                     {selectedAgent.name}
                                 </h2>
-                                <p className="text-teal-600 dark:text-teal-400 font-medium">{selectedAgent.title}</p>
+                                <p className="text-teal-600 dark:text-teal-400 font-normal">{selectedAgent.title}</p>
                                 <div className="flex gap-2 mt-2">
                                     {selectedAgent.jobAttributes.map((attr, i) => (
                                         <span key={i} className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
@@ -692,7 +698,7 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                         <div className="flex gap-3">
                              <button
                                 onClick={() => onConsultAgent(selectedAgent)}
-                                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium shadow-sm transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-normal shadow-sm transition-colors"
                              >
                                  <MicrophoneIcon className="w-4 h-4" />
                                  Start Voice Session
@@ -704,12 +710,12 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="md:col-span-2 space-y-6">
                             <div>
-                                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-2">Professional Bio</h3>
+                                <h3 className="text-sm font-normal text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-2">Professional Bio</h3>
                                 <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{selectedAgent.fullBio}</p>
                             </div>
                             
                             <div>
-                                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-2">Key Responsibilities</h3>
+                                <h3 className="text-sm font-normal text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-2">Key Responsibilities</h3>
                                 <ul className="space-y-2">
                                     {selectedAgent.responsibilities.map((resp, i) => (
                                         <li key={i} className="text-sm text-gray-600 dark:text-gray-300 flex items-start">
@@ -721,7 +727,7 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                             </div>
 
                             <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                                <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-3">Delegate Task</h3>
+                                <h3 className="text-sm font-normal text-gray-900 dark:text-gray-100 uppercase tracking-wide mb-3">Delegate Task</h3>
                                 <form onSubmit={handleDelegate} className="space-y-4">
                                     <div>
                                         <textarea 
@@ -734,7 +740,7 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                                     <div className="flex justify-end">
                                         <button 
                                             type="submit" 
-                                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none"
+                                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none"
                                             disabled={!agentTaskInput.trim()}
                                         >
                                             <SparklesIcon className="w-4 h-4 mr-2" />
@@ -747,7 +753,7 @@ export const VirtualDepartmentPage: React.FC<VirtualDepartmentPageProps> = ({
                         
                         <div className="md:col-span-1 space-y-4">
                             <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">Capabilities</h3>
+                                <h3 className="text-sm font-normal text-gray-700 dark:text-gray-200 mb-3">Capabilities</h3>
                                 <ul className="space-y-2">
                                     {selectedAgent.capabilities.map((cap, i) => (
                                         <li key={i} className="text-xs text-gray-600 dark:text-gray-400 flex items-start">

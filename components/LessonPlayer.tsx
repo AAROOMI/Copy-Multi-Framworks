@@ -24,7 +24,7 @@ const MultipleChoiceQuiz: React.FC<{ question: QuizQuestion; onComplete: (isCorr
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <p className="font-semibold text-gray-800 dark:text-gray-200">{question.question}</p>
+            <p className="font-normal text-gray-800 dark:text-gray-200">{question.question}</p>
             <div className="space-y-3">
                 {question.options.map((option, index) => (
                     <label key={index} className={`flex items-center p-3 border rounded-md cursor-pointer transition-colors ${getOptionClasses(index)}`}>
@@ -100,7 +100,7 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ course, lesson, onCl
                 <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">{course.title}</p>
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{lesson.title}</h2>
+                        <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100">{lesson.title}</h2>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
                         <CloseIcon className="w-6 h-6 text-gray-500" />
@@ -120,11 +120,11 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({ course, lesson, onCl
 
                     {questions.length > 0 && (
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{lesson.quiz?.title} ({currentQuestionIndex + 1}/{questions.length})</h3>
+                            <h3 className="text-lg font-normal text-gray-900 dark:text-gray-100 mb-4">{lesson.quiz?.title} ({currentQuestionIndex + 1}/{questions.length})</h3>
                             
                             {showSummary ? (
                                 <div className={`text-center p-6 rounded-lg ${finalScore >= 50 ? 'bg-green-50 dark:bg-green-900/50' : 'bg-red-50 dark:bg-red-900/50'}`}>
-                                    <h4 className="text-2xl font-bold">{finalScore >= 50 ? 'Lesson Complete!' : 'Needs Review'}</h4>
+                                    <h4 className="text-lg font-normal">{finalScore >= 50 ? 'Lesson Complete!' : 'Needs Review'}</h4>
                                     <p className="text-lg mt-2">You scored {quizResults.filter(Boolean).length} out of {questions.length} ({finalScore.toFixed(0)}%).</p>
                                     {finalScore < 50 && <p className="text-sm mt-2">You need a score of 50% or higher to pass. Please review the material and try again.</p>}
                                     <button onClick={onClose} className="mt-6 bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700">

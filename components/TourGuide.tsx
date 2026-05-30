@@ -139,23 +139,23 @@ export const TourGuide: React.FC<TourGuideProps> = ({ steps, isOpen, onClose }) 
         className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-80 border border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out"
       >
         <div className="flex justify-between items-start">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{step.title}</h3>
+            <h3 className="text-lg font-normal text-gray-900 dark:text-gray-100 mb-2">{step.title}</h3>
             <button onClick={onClose} className="-mt-2 -mr-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
                 <CloseIcon className="w-5 h-5 text-gray-500" />
             </button>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300">{step.content}</p>
         <div className="mt-6 flex justify-between items-center">
-            <span className="text-xs font-medium text-gray-400 dark:text-gray-500">
+            <span className="text-xs font-normal text-gray-400 dark:text-gray-500">
                 Step {currentStep + 1} of {steps.length}
             </span>
             <div className="space-x-2">
                 {currentStep > 0 && (
-                    <button onClick={handlePrev} className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                    <button onClick={handlePrev} className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                         Previous
                     </button>
                 )}
-                <button onClick={handleNext} className="px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
+                <button onClick={handleNext} className="px-3 py-1.5 border border-transparent text-sm font-normal rounded-md text-white bg-teal-600 hover:bg-teal-700">
                     {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
                 </button>
             </div>

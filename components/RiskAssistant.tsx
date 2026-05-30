@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, Type, FunctionDeclaration } from '@google/genai';
+import { LiveServerMessage, Modality, Type, FunctionDeclaration } from '@google/genai';
+import { AIService } from '../services/aiService';
+import { LocalLLM } from '../services/localLLM';
 import type { Risk } from '../types';
 import { CloseIcon, MicrophoneIcon } from './Icons';
 import { virtualAgents } from '../data/virtualAgents';
@@ -49,7 +51,6 @@ async function decodeAudioData(
 }
 
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 let nextStartTime = 0;
 
 interface RiskAssistantProps {
@@ -67,7 +68,7 @@ export const RiskAssistant: React.FC<RiskAssistantProps> = ({ isOpen, onClose, r
     const conversationRef = useRef(conversation);
     const currentTurnId = useRef<string | null>(null);
 
-    const sessionPromise = useRef<Promise<LiveSession> | null>(null);
+    const sessionPromise = useRef<Promise<any> | null>(null);
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
     const sources = useRef(new Set<AudioBufferSourceNode>());
@@ -150,7 +151,13 @@ export const RiskAssistant: React.FC<RiskAssistantProps> = ({ isOpen, onClose, r
         if (isOpen) {
             const startSession = async () => {
                 try {
-                    if (!process.env.API_KEY) throw new Error("API key not configured.");
+                    if (!navigator.onLine) {
+                        setStatus('speaking');
+                        const response = await LocalLLM.generateResponse("Rashid, start the risk interview.");
+                        setConversation([{ speaker: 'assistant', text: response, id: 'offline-intro' }]);
+                        setStatus('idle');
+                        return;
+                    }
                     if (!navigator.mediaDevices?.getUserMedia) throw new Error("Browser does not support audio recording.");
                     setError(null);
                     setConversation([]);
@@ -189,8 +196,8 @@ export const RiskAssistant: React.FC<RiskAssistantProps> = ({ isOpen, onClose, r
 
                     Start by introducing yourself as Rashid, the Risk Manager, and ask if there are any new risks to assess today.`;
 
-                    sessionPromise.current = ai.live.connect({
-                        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                    sessionPromise.current = AIService.getAI().live.connect({
+                        model: 'gemini-3.1-flash-live-preview',
                         callbacks: {
                             onopen: () => {
                                 setStatus('listening');
@@ -198,11 +205,10 @@ export const RiskAssistant: React.FC<RiskAssistantProps> = ({ isOpen, onClose, r
                                 scriptProcessorRef.current = inputAudioContextRef.current!.createScriptProcessor(4096, 1, 1);
                                 scriptProcessorRef.current.onaudioprocess = (e) => {
                                     const inputData = e.inputBuffer.getChannelData(0);
-                                    const pcmBlob: Blob = {
-                                        data: encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer)),
-                                        mimeType: 'audio/pcm;rate=16000',
-                                    };
-                                    sessionPromise.current?.then(session => session.sendRealtimeInput({ media: pcmBlob }));
+                                    const pcmData = encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer));
+                                    sessionPromise.current?.then(session => session.sendRealtimeInput({ 
+                                        audio: { data: pcmData, mimeType: 'audio/pcm;rate=16000' } 
+                                    }));
                                 };
                                 source.connect(scriptProcessorRef.current);
                                 scriptProcessorRef.current.connect(inputAudioContextRef.current!.destination);
@@ -318,7 +324,6 @@ export const RiskAssistant: React.FC<RiskAssistantProps> = ({ isOpen, onClose, r
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } } }, // Deep voice for Rashid
                             systemInstruction,
                             tools: [{ functionDeclarations }],
-                            languageCodes: ['en-US', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA'],
                         },
                     });
                 } catch (err: any) {
@@ -349,8 +354,8 @@ export const RiskAssistant: React.FC<RiskAssistantProps> = ({ isOpen, onClose, r
                      <div className="flex items-center">
                         <img src={rashidAvatar} alt="Rashid AI" className="w-12 h-12 rounded-full mr-3 border-2 border-teal-600 shadow-sm" />
                         <div>
-                            <h2 className="font-bold text-lg text-gray-800 dark:text-gray-100">Rashid AI</h2>
-                            <p className="text-xs text-teal-600 dark:text-teal-400 font-bold">Enterprise Risk Manager • ISO 31000</p>
+                            <h2 className="font-normal text-lg text-gray-800 dark:text-gray-100">Rashid AI</h2>
+                            <p className="text-xs text-teal-600 dark:text-teal-400 font-normal">Enterprise Risk Manager • ISO 31000</p>
                         </div>
                     </div>
                     <button onClick={handleClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -397,7 +402,7 @@ export const RiskAssistant: React.FC<RiskAssistantProps> = ({ isOpen, onClose, r
                                 ${status === 'thinking' ? 'border-purple-500' : ''}
                             `}></div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 capitalize">{status}</p>
+                        <p className="text-sm font-normal text-gray-600 dark:text-gray-400 capitalize">{status}</p>
                         {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
                     </div>
                 </main>

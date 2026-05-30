@@ -45,21 +45,21 @@ const EditableControlRow: React.FC<{
     return (
          <div className="p-4 border rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 relative">
              {isSaving && (
-                 <div className="absolute top-2 right-2 px-2 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 animate-fade-out">
+                 <div className="absolute top-2 right-2 px-2 py-1 text-xs font-normal rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 animate-fade-out">
                      Saved
                  </div>
             )}
             <div className="flex items-start gap-4">
-                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200`}>
+                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-normal text-lg bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200`}>
                     {index + 1}
                 </div>
                 <div className="flex-grow">
-                    <h3 className="text-lg font-semibold text-teal-700 dark:text-teal-300 font-mono">{item.controlCode}</h3>
+                    <h3 className="text-lg font-normal text-teal-700 dark:text-teal-300 font-mono">{item.controlCode}</h3>
                     <p className="mt-1 text-sm text-gray-800 dark:text-gray-200">{item.controlName}</p>
 
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
                         <div className="md:col-span-2">
-                            <label htmlFor={`currentStatusDescription-${item.controlCode}`} className="font-medium text-gray-500 dark:text-gray-400">Current Status Description</label>
+                            <label htmlFor={`currentStatusDescription-${item.controlCode}`} className="font-normal text-gray-500 dark:text-gray-400">Current Status Description</label>
                             <textarea
                                 id={`currentStatusDescription-${item.controlCode}`}
                                 name="currentStatusDescription"
@@ -72,7 +72,7 @@ const EditableControlRow: React.FC<{
                             />
                         </div>
                         <div>
-                             <label htmlFor={`controlStatus-${item.controlCode}`} className="font-medium text-gray-500 dark:text-gray-400">Control Status</label>
+                             <label htmlFor={`controlStatus-${item.controlCode}`} className="font-normal text-gray-500 dark:text-gray-400">Control Status</label>
                              <select
                                 id={`controlStatus-${item.controlCode}`}
                                 name="controlStatus"
@@ -89,7 +89,7 @@ const EditableControlRow: React.FC<{
                             </select>
                         </div>
                          <div className="md:col-span-2">
-                            <label htmlFor={`recommendation-${item.controlCode}`} className="font-medium text-gray-500 dark:text-gray-400">Recommendation</label>
+                            <label htmlFor={`recommendation-${item.controlCode}`} className="font-normal text-gray-500 dark:text-gray-400">Recommendation</label>
                             <textarea
                                 id={`recommendation-${item.controlCode}`}
                                 name="recommendation"
@@ -102,7 +102,7 @@ const EditableControlRow: React.FC<{
                             />
                         </div>
                         <div>
-                             <label htmlFor={`managementResponse-${item.controlCode}`} className="font-medium text-gray-500 dark:text-gray-400">Management Response</label>
+                             <label htmlFor={`managementResponse-${item.controlCode}`} className="font-normal text-gray-500 dark:text-gray-400">Management Response</label>
                             <textarea
                                 id={`managementResponse-${item.controlCode}`}
                                 name="managementResponse"
@@ -115,7 +115,7 @@ const EditableControlRow: React.FC<{
                             />
                         </div>
                         <div>
-                             <label htmlFor={`targetDate-${item.controlCode}`} className="font-medium text-gray-500 dark:text-gray-400">Target Date</label>
+                             <label htmlFor={`targetDate-${item.controlCode}`} className="font-normal text-gray-500 dark:text-gray-400">Target Date</label>
                              <input
                                 type="date"
                                 id={`targetDate-${item.controlCode}`}
@@ -152,7 +152,7 @@ export const AssessmentAiSheet: React.FC<AssessmentAiSheetProps> = ({ assessment
     return (
         <div className="space-y-12">
             <div>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">NCA ECC Assessment: Full Sheet View</h1>
+                <h1 className="text-xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">NCA ECC Assessment: Full Sheet View</h1>
                 <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">
                     {isEditable && canUpdate ? "Edit all assessment controls on a single page." : "Read-only view of the full assessment sheet."}
                 </p>
@@ -165,7 +165,7 @@ export const AssessmentAiSheet: React.FC<AssessmentAiSheetProps> = ({ assessment
             
             {domains.map(([domainName, controls]) => (
                 <div key={domainName} className="bg-transparent space-y-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-4">{domainName}</h2>
+                    <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-4">{domainName}</h2>
                     <div className="space-y-6">
                         {controls.map(item => {
                             const currentIndex = controlCounter;

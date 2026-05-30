@@ -112,21 +112,21 @@ const EditableControlRow: React.FC<EditableControlRowProps> = ({ item, onUpdateI
     return (
          <div ref={rowRef} className={`p-4 border rounded-lg transition-all duration-500 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 relative ${activeField ? 'border-teal-300 dark:border-teal-800 shadow-md transform scale-[1.01]' : ''}`}>
              {isSaving && (
-                 <div className="absolute top-2 right-2 px-2 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 animate-fade-out">
+                 <div className="absolute top-2 right-2 px-2 py-1 text-xs font-normal rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 animate-fade-out">
                      Saved
                  </div>
             )}
             <div className="flex items-start gap-4">
-                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${activeField ? 'bg-teal-500 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>
+                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-normal text-lg transition-colors ${activeField ? 'bg-teal-500 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>
                     {index + 1}
                 </div>
                 <div className="flex-grow">
-                    <h3 className="text-lg font-semibold text-teal-700 dark:text-teal-300 font-mono">{item.controlCode}</h3>
+                    <h3 className="text-lg font-normal text-teal-700 dark:text-teal-300 font-mono">{item.controlCode}</h3>
                     <p className="mt-1 text-sm text-gray-800 dark:text-gray-200">{item.controlName}</p>
 
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
                         <div className="md:col-span-2">
-                            <label htmlFor={`currentStatusDescription-${item.controlCode}`} className={`font-medium transition-colors ${activeField === 'currentStatusDescription' ? 'text-teal-600 dark:text-teal-400 font-bold' : 'text-gray-500 dark:text-gray-400'}`}>Current Status Description</label>
+                            <label htmlFor={`currentStatusDescription-${item.controlCode}`} className={`font-normal transition-colors ${activeField === 'currentStatusDescription' ? 'text-teal-600 dark:text-teal-400 font-normal' : 'text-gray-500 dark:text-gray-400'}`}>Current Status Description</label>
                             <textarea
                                 id={`currentStatusDescription-${item.controlCode}`}
                                 name="currentStatusDescription"
@@ -139,7 +139,7 @@ const EditableControlRow: React.FC<EditableControlRowProps> = ({ item, onUpdateI
                             />
                         </div>
                         <div>
-                             <label htmlFor={`controlStatus-${item.controlCode}`} className={`font-medium transition-colors ${activeField === 'controlStatus' ? 'text-teal-600 dark:text-teal-400 font-bold' : 'text-gray-500 dark:text-gray-400'}`}>Control Status</label>
+                             <label htmlFor={`controlStatus-${item.controlCode}`} className={`font-normal transition-colors ${activeField === 'controlStatus' ? 'text-teal-600 dark:text-teal-400 font-normal' : 'text-gray-500 dark:text-gray-400'}`}>Control Status</label>
                              <select
                                 id={`controlStatus-${item.controlCode}`}
                                 name="controlStatus"
@@ -152,7 +152,7 @@ const EditableControlRow: React.FC<EditableControlRowProps> = ({ item, onUpdateI
                             </select>
                         </div>
                          <div>
-                            <label className="font-medium text-gray-500 dark:text-gray-400">Evidence</label>
+                            <label className="font-normal text-gray-500 dark:text-gray-400">Evidence</label>
                             <div className="mt-1">
                                 {localItem.evidence ? (
                                     <div className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
@@ -170,7 +170,7 @@ const EditableControlRow: React.FC<EditableControlRowProps> = ({ item, onUpdateI
                                     <div className="text-sm text-gray-400 italic py-2">No evidence uploaded.</div>
                                 )}
                                 {isEditable && canUpdate && (
-                                     <button type="button" onClick={() => fileInputRef.current?.click()} className={`mt-2 text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline flex items-center p-1 rounded-md transition-shadow`}>
+                                     <button type="button" onClick={() => fileInputRef.current?.click()} className={`mt-2 text-sm font-normal text-teal-600 dark:text-teal-400 hover:underline flex items-center p-1 rounded-md transition-shadow`}>
                                         <UploadIcon className="w-4 h-4 mr-1"/>
                                         {localItem.evidence ? 'Replace Evidence' : 'Upload Evidence'}
                                      </button>
@@ -185,7 +185,7 @@ const EditableControlRow: React.FC<EditableControlRowProps> = ({ item, onUpdateI
                             </div>
                         </div>
                          <div className="md:col-span-2">
-                            <label htmlFor={`recommendation-${item.controlCode}`} className={`font-medium transition-colors ${activeField === 'recommendation' ? 'text-teal-600 dark:text-teal-400 font-bold' : 'text-gray-500 dark:text-gray-400'}`}>Recommendation</label>
+                            <label htmlFor={`recommendation-${item.controlCode}`} className={`font-normal transition-colors ${activeField === 'recommendation' ? 'text-teal-600 dark:text-teal-400 font-normal' : 'text-gray-500 dark:text-gray-400'}`}>Recommendation</label>
                             <textarea
                                 id={`recommendation-${item.controlCode}`}
                                 name="recommendation"
@@ -198,7 +198,7 @@ const EditableControlRow: React.FC<EditableControlRowProps> = ({ item, onUpdateI
                             />
                         </div>
                         <div>
-                             <label htmlFor={`managementResponse-${item.controlCode}`} className={`font-medium transition-colors ${activeField === 'managementResponse' ? 'text-teal-600 dark:text-teal-400 font-bold' : 'text-gray-500 dark:text-gray-400'}`}>Management Response</label>
+                             <label htmlFor={`managementResponse-${item.controlCode}`} className={`font-normal transition-colors ${activeField === 'managementResponse' ? 'text-teal-600 dark:text-teal-400 font-normal' : 'text-gray-500 dark:text-gray-400'}`}>Management Response</label>
                             <textarea
                                 id={`managementResponse-${item.controlCode}`}
                                 name="managementResponse"
@@ -211,7 +211,7 @@ const EditableControlRow: React.FC<EditableControlRowProps> = ({ item, onUpdateI
                             />
                         </div>
                         <div>
-                             <label htmlFor={`targetDate-${item.controlCode}`} className={`font-medium transition-colors ${activeField === 'targetDate' ? 'text-teal-600 dark:text-teal-400 font-bold' : 'text-gray-500 dark:text-gray-400'}`}>Target Date</label>
+                             <label htmlFor={`targetDate-${item.controlCode}`} className={`font-normal transition-colors ${activeField === 'targetDate' ? 'text-teal-600 dark:text-teal-400 font-normal' : 'text-gray-500 dark:text-gray-400'}`}>Target Date</label>
                              <input
                                 type="date"
                                 id={`targetDate-${item.controlCode}`}
@@ -262,7 +262,7 @@ export const AssessmentSheet: React.FC<AssessmentSheetProps> = ({ filteredDomain
 
                 return (
                     <div key={domainName} className="bg-transparent space-y-6">
-                        <h2 id={`domain-${domainName.replace(/\s+/g, '-').toLowerCase()}`} className="text-2xl font-bold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-4">{domainName}</h2>
+                        <h2 id={`domain-${domainName.replace(/\s+/g, '-').toLowerCase()}`} className="text-lg font-normal text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-4">{domainName}</h2>
                         <div className="space-y-6">
                             {controls.map((item, index) => (
                                 <EditableControlRow

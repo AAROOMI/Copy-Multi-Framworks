@@ -2,10 +2,14 @@
 
 
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { LogoIcon, ShieldCheckIcon, UserGroupIcon, ChartPieIcon, SunIcon, MoonIcon, CheckIcon, ClipboardIcon, ChatBotIcon, EyeIcon, EyeSlashIcon } from './Icons';
+import { MetaMaskService } from '../services/metaMaskService';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => Promise<{error: string, code?: string} | null>;
+  onMetaMaskLogin: (address: string) => Promise<{error: string} | null>;
+  onGoogleLogin: () => Promise<{error: string} | null>;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   onSetupCompany: () => void;
@@ -15,16 +19,19 @@ interface LoginPageProps {
 }
 
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode }> = ({ icon, title, children }) => (
-    <div className="flex flex-col items-center p-6 text-center bg-white dark:bg-gray-800/50 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="p-3 bg-teal-100 dark:bg-teal-900 rounded-full text-teal-600 dark:text-teal-300">
+    <motion.div 
+        whileHover={{ translateY: -5 }}
+        className="flex flex-col items-center p-6 text-center glass-panel bg-white/5 border-white/10 rounded-2xl shadow-xl"
+    >
+        <div className="p-3 bg-teal-500/20 rounded-full text-teal-400">
             {icon}
         </div>
-        <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{children}</p>
-    </div>
+        <h3 className="mt-4 text-[13px] font-bold text-white uppercase tracking-widest">{title}</h3>
+        <p className="mt-2 text-[11px] text-slate-400 leading-relaxed font-normal">{children}</p>
+    </motion.div>
 );
 
-const SignInView: React.FC<Omit<LoginPageProps, 'theme' | 'toggleTheme' | 'onSetupCompany' | 'onForgotPassword' | 'onResetPassword'> & { setView: (view: 'forgotPassword') => void; }> = ({ onLogin, onVerify, setView }) => {
+const SignInView: React.FC<Omit<LoginPageProps, 'theme' | 'toggleTheme' | 'onSetupCompany' | 'onForgotPassword' | 'onResetPassword'> & { setView: (view: 'forgotPassword') => void; }> = ({ onLogin, onMetaMaskLogin, onGoogleLogin, onVerify, setView }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<{message: string, code?: string} | null>(null);
@@ -35,68 +42,149 @@ const SignInView: React.FC<Omit<LoginPageProps, 'theme' | 'toggleTheme' | 'onSet
         e.preventDefault();
         setIsLoading(true);
         setError(null);
-        const loginResult = await onLogin(email, password);
-        if (loginResult) {
-            setError({ message: loginResult.error, code: loginResult.code });
+        try {
+            const loginResult = await onLogin(email, password);
+            if (loginResult) {
+                setError({ message: loginResult.error, code: loginResult.code });
+            }
+        } catch (err: any) {
+             setError({ message: err.message || "Login failed" });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const loginResult = await onGoogleLogin();
+            if (loginResult) {
+                setError({ message: loginResult.error });
+            }
+        } catch (err: any) {
+            setError({ message: "Google Login failed: " + (err.message || String(err)) });
         }
         setIsLoading(false);
     };
 
-    const handleVerificationClick = () => {
-        if (onVerify(email)) {
-            setError(null);
+    const handleMetaMaskLogin = async () => {
+        setIsLoading(true);
+        setError(null);
+        const result = await MetaMaskService.connect();
+        if ('error' in result) {
+            setError({ message: result.error });
         } else {
-            setError({ message: "An error occurred during verification. Please contact an administrator." });
+            const loginResult = await onMetaMaskLogin(result.address);
+            if (loginResult) {
+                setError({ message: loginResult.error });
+            }
         }
+        setIsLoading(false);
     };
 
     return (
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Email address
+                <label htmlFor="email" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
+                    Enterprise ID / Email
                 </label>
                 <div className="mt-1">
                     <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
+                        className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all" 
+                        placeholder="aaroomi@gmail.com" />
                 </div>
             </div>
             <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Password
+                <label htmlFor="password" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
+                    Access Token / Password
                 </label>
                 <div className="mt-1 relative">
                     <input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all" 
+                        placeholder="••••••••" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors">
                         {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                     </button>
                 </div>
             </div>
              <div className="flex items-center justify-end">
                 <div className="text-sm">
-                    <button type="button" onClick={() => setView('forgotPassword')} className="font-medium text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300">
-                        Forgot your password?
+                    <button type="button" onClick={() => setView('forgotPassword')} className="text-[11px] font-medium text-teal-400 hover:text-teal-300 transition-colors">
+                        Recovery Terminal
                     </button>
                 </div>
             </div>
             {error && (
-                <div className={`p-4 rounded-md border ${error.code === 'unverified' ? 'bg-yellow-50 dark:bg-yellow-900/50 border-yellow-200 dark:border-yellow-500/50' : 'bg-red-50 dark:bg-red-900/50 border-red-200 dark:border-red-500/50'}`}>
-                    <p className={`text-sm text-center ${error.code === 'unverified' ? 'text-yellow-800 dark:text-yellow-200' : 'text-red-700 dark:text-red-200'}`}>{error.message}</p>
-                    {error.code === 'unverified' && (
-                        <>
-                            <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-2 text-center">Click the button below to simulate verifying your email address.</p>
-                            <button type="button" onClick={handleVerificationClick} className="mt-3 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
-                                Verify My Email
-                            </button>
-                        </>
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-xl border ${error.code === 'unverified' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}
+                >
+                    <p className="text-[11px] text-center font-medium leading-relaxed">{error.message}</p>
+                    {error.message.includes("MetaMask") && (
+                        <button type="button" onClick={handleMetaMaskLogin} className="mt-3 w-full flex justify-center py-2 px-4 border border-teal-500/30 rounded-lg text-xs font-bold text-teal-400 hover:bg-teal-500/10 transition-all uppercase tracking-widest">
+                            Retry Connection
+                        </button>
                     )}
-                </div>
+                </motion.div>
             )}
-            <div>
-                <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 dark:disabled:bg-gray-600">
-                    {isLoading ? <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : "Sign in"}
+            <div className="relative group">
+                {/* Holographic Button Effect */}
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-teal-500 to-purple-600 rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                <button 
+                    type="submit" 
+                    disabled={isLoading} 
+                    className="relative w-full flex justify-center py-3.5 px-4 bg-[#0F172A] border border-white/10 rounded-xl shadow-2xl text-[13px] font-bold text-white uppercase tracking-widest hover:border-white/20 transition-all disabled:opacity-50"
+                >
+                    {isLoading ? <div className="flex items-center gap-3">
+                        <svg className="animate-spin h-5 w-5 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span>Authenticating...</span>
+                    </div> : "Secure Sign-In"}
                 </button>
+            </div>
+
+            <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/5" />
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-bold">
+                    <span className="px-3 bg-[#0F172A] text-slate-500">Multimodal Auth</span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <button 
+                    type="button" 
+                    onClick={handleGoogleLogin}
+                    disabled={isLoading}
+                    className="w-full flex justify-center items-center py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl shadow-lg text-[11px] font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all"
+                >
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-4 h-4 mr-2" />
+                    Google SSO
+                </button>
+                <button 
+                    type="button" 
+                    onClick={handleMetaMaskLogin}
+                    disabled={isLoading} 
+                    className="w-full flex justify-center items-center py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl shadow-lg text-[11px] font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all"
+                >
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Monkey_Face.svg" alt="MetaMask" className="w-4 h-4 mr-2" />
+                    Web3 Wallet
+                </button>
+            </div>
+             <div className="mt-4 pt-4 border-t border-white/5 flex flex-col items-center gap-3">
+                <button 
+                    type="button" 
+                    onClick={() => onLogin('admin@demo.com', 'demo123')}
+                    className="text-[10px] font-bold text-slate-500 hover:text-teal-400 uppercase tracking-widest transition-colors"
+                >
+                    Bypass to Demo Sandbox
+                </button>
+                <div className="flex items-center gap-2 px-3 py-1 bg-teal-500/10 border border-teal-500/20 rounded-full">
+                    <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></div>
+                    <span className="text-[9px] font-bold text-teal-400 uppercase tracking-widest">Edge-AI Assessment Mode Active</span>
+                </div>
             </div>
         </form>
     );
@@ -111,15 +199,24 @@ const ForgotPasswordView: React.FC<{ onForgotPassword: LoginPageProps['onForgotP
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!email || !email.includes('@')) {
+            setMessage("Please enter a valid email address.");
+            return;
+        }
         setIsLoading(true);
         setMessage('');
         setToken(null);
-        const result = await onForgotPassword(email);
-        setMessage(result.message);
-        if (result.success && result.token) {
-            setToken(result.token);
+        try {
+            const result = await onForgotPassword(email);
+            setMessage(result.message);
+            if (result.success && result.token) {
+                setToken(result.token);
+            }
+        } catch (err: any) {
+            setMessage("Error: " + (err.message || "An error occurred."));
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
     
     const handleCopy = () => {
@@ -134,38 +231,43 @@ const ForgotPasswordView: React.FC<{ onForgotPassword: LoginPageProps['onForgotP
     return (
         <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-                <label htmlFor="email-forgot" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
+                <label htmlFor="email-forgot" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Identity Verification Email</label>
                 <div className="mt-1">
                     <input id="email-forgot" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
+                        className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all" />
                 </div>
             </div>
             {message && (
-                <div className="p-4 rounded-md border bg-blue-50 dark:bg-blue-900/50 border-blue-200 dark:border-blue-500/50">
-                    <p className="text-sm text-center text-blue-800 dark:text-blue-200">{message}</p>
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="p-4 rounded-xl border bg-blue-500/10 border-blue-500/20"
+                >
+                    <p className="text-[11px] text-center text-blue-400 leading-relaxed">{message}</p>
                     {token && (
-                        <div className="mt-3">
-                            <div className="flex items-center space-x-2 p-2 rounded-md bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600">
-                                <input type="text" readOnly value={token} className="flex-grow bg-transparent text-xs font-mono text-gray-600 dark:text-gray-300 focus:outline-none" />
-                                <button type="button" onClick={handleCopy} className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                                    {isCopied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <ClipboardIcon className="w-4 h-4 text-gray-500" />}
+                        <div className="mt-4 p-4 rounded-xl bg-teal-500/5 border border-teal-500/20">
+                            <p className="text-[9px] text-teal-400 text-center mb-3 uppercase tracking-widest px-2">Generated Recovery Token</p>
+                            <div className="flex items-center space-x-2 p-2.5 rounded-lg bg-black/40 border border-white/5 shadow-inner">
+                                <input type="text" readOnly value={token} className="flex-grow bg-transparent text-[13px] font-mono text-center text-teal-400 focus:outline-none" />
+                                <button type="button" onClick={handleCopy} className="p-2 rounded-md hover:bg-white/5 transition-colors">
+                                    {isCopied ? <CheckIcon className="w-5 h-5 text-green-500" /> : <ClipboardIcon className="w-5 h-5 text-teal-400" />}
                                 </button>
                             </div>
-                            <button type="button" onClick={() => setView('resetPassword')} className="mt-3 text-sm font-medium text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 w-full text-center">
-                                I have my token, proceed to reset &rarr;
+                            <button type="button" onClick={() => setView('resetPassword')} className="mt-4 w-full py-2.5 bg-teal-600 text-white text-[11px] font-bold uppercase tracking-widest rounded-lg hover:bg-teal-500 transition-colors shadow-lg shadow-teal-600/20">
+                                Initiate Token Authorization &rarr;
                             </button>
                         </div>
                     )}
-                </div>
+                </motion.div>
             )}
             <div>
-                <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 dark:disabled:bg-gray-600">
-                    {isLoading ? <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : "Send Reset Link"}
+                <button type="submit" disabled={isLoading} className="w-full flex justify-center py-3 bg-[#0F172A] border border-white/10 rounded-xl text-[13px] font-bold text-white uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 hover:border-white/20">
+                    {isLoading ? "Broadcasting Recovery Request..." : "Request Recovery Token"}
                 </button>
             </div>
-            <div className="text-center text-sm">
-                <button type="button" onClick={() => setView('signIn')} className="font-medium text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300">
-                    &larr; Back to Sign In
+            <div className="text-center">
+                <button type="button" onClick={() => setView('signIn')} className="text-[11px] font-bold text-slate-500 hover:text-teal-400 uppercase tracking-widest transition-colors">
+                    Return to Primary Access Port
                 </button>
             </div>
         </form>
@@ -202,126 +304,128 @@ const ResetPasswordView: React.FC<{ onResetPassword: LoginPageProps['onResetPass
     };
 
     return (
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-                <label htmlFor="token" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Reset Token</label>
+                <label htmlFor="token" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Authorization Token</label>
                 <input id="token" name="token" type="text" required value={token} onChange={(e) => setToken(e.target.value)}
-                    className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
+                    className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all" />
             </div>
             <div>
-                <label htmlFor="new-password">New Password</label>
+                <label htmlFor="new-password" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">New Terminal Token</label>
                 <div className="mt-1 relative">
                     <input id="new-password" name="newPassword" type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)}
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors">
                         {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                     </button>
                 </div>
             </div>
             <div>
-                <label htmlFor="confirm-password">Confirm New Password</label>
+                <label htmlFor="confirm-password" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">Confirm Authorization Token</label>
                 <div className="mt-1 relative">
                     <input id="confirm-password" name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all" />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors">
                         {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                     </button>
                 </div>
             </div>
-            {message && <p className="text-sm text-center p-4 rounded-md border bg-green-50 dark:bg-green-900/50 border-green-200 dark:border-green-500/50 text-green-800 dark:text-green-200">{message}</p>}
-            {error && <p className="text-sm text-center p-4 rounded-md border bg-red-50 dark:bg-red-900/50 border-red-200 dark:border-red-500/50 text-red-700 dark:text-red-200">{error}</p>}
+            {message && <p className="p-4 rounded-xl border bg-green-500/10 border-green-500/20 text-green-400 text-[11px] text-center font-medium leading-relaxed">{message}</p>}
+            {error && <p className="p-4 rounded-xl border bg-red-500/10 border-red-500/20 text-red-400 text-[11px] text-center font-medium leading-relaxed">{error}</p>}
             <div>
-                <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 dark:disabled:bg-gray-600">
-                    {isLoading ? "Resetting..." : "Set New Password"}
+                <button type="submit" disabled={isLoading} className="w-full flex justify-center py-3.5 bg-[#0F172A] border border-white/10 rounded-xl text-[13px] font-bold text-white uppercase tracking-widest shadow-xl transition-all disabled:opacity-50 hover:border-white/20">
+                    {isLoading ? "Propagating New Tokens..." : "Establish New Access Protocol"}
                 </button>
             </div>
-            <div className="text-center text-sm">
-                <button type="button" onClick={() => setView('signIn')} className="font-medium text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300">
-                    &larr; Back to Sign In
+            <div className="text-center">
+                <button type="button" onClick={() => setView('signIn')} className="text-[11px] font-bold text-slate-500 hover:text-teal-400 uppercase tracking-widest transition-colors">
+                    Re-authenticate &rarr;
                 </button>
             </div>
         </form>
     );
 };
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, theme, toggleTheme, onSetupCompany, onVerify, onForgotPassword, onResetPassword }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onMetaMaskLogin, onGoogleLogin, theme, toggleTheme, onSetupCompany, onVerify, onForgotPassword, onResetPassword }) => {
     const [view, setView] = useState<'signIn' | 'forgotPassword' | 'resetPassword'>('signIn');
 
     const viewTitles = {
-        signIn: 'Sign in to your workspace',
-        forgotPassword: 'Reset your password',
-        resetPassword: 'Set a new password',
+        signIn: 'Secure Access Terminal',
+        forgotPassword: 'Key Recovery Protocol',
+        resetPassword: 'New Token Generation',
     };
     
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
-            <div className="absolute top-0 right-0 p-6">
+        <div className="min-h-screen bg-[#0B1120] text-slate-200 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+            {/* Background Orbs */}
+            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+            <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+            <div className="absolute top-0 right-0 p-6 z-20">
                 <button
                     onClick={toggleTheme}
-                    className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 dark:focus:ring-offset-gray-900"
+                    className="p-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all shadow-xl backdrop-blur-md"
                     aria-label="Toggle theme"
                 >
-                    {theme === 'light' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
+                    {theme === 'light' ? <MoonIcon className="w-5 h-5" /> : <SunIcon className="w-5 h-5" />}
                 </button>
             </div>
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <LogoIcon className="mx-auto h-20 w-auto text-teal-600" />
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
-                    {viewTitles[view]}
+
+            <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex justify-center mb-8"
+                >
+                    <div className="p-4 rounded-3xl bg-gradient-to-tr from-teal-500 to-cyan-400 shadow-2xl shadow-teal-500/20">
+                        <LogoIcon className="h-12 w-auto text-white" />
+                    </div>
+                </motion.div>
+                <h2 className="text-center text-[10px] font-bold text-teal-400 uppercase tracking-[0.4em] mb-2">
+                    ECC COMPLIANCE ORCHESTRATOR
                 </h2>
-                <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-                    Cybersecurity Controls Navigator
-                </p>
+                <h1 className="text-center text-2xl font-bold text-white tracking-tight">
+                    {viewTitles[view]}
+                </h1>
             </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-gray-200 dark:border-gray-700">
-                    {view === 'signIn' && <SignInView onLogin={onLogin} onVerify={onVerify} setView={setView} />}
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md z-10">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-panel bg-white/[0.03] backdrop-blur-xl py-10 px-6 shadow-2xl sm:rounded-3xl sm:px-10 border border-white/10"
+                >
+                    {view === 'signIn' && <SignInView onLogin={onLogin} onMetaMaskLogin={onMetaMaskLogin} onGoogleLogin={onGoogleLogin} onVerify={onVerify} setView={setView} />}
                     {view === 'forgotPassword' && <ForgotPasswordView onForgotPassword={onForgotPassword} setView={setView} />}
                     {view === 'resetPassword' && <ResetPasswordView onResetPassword={onResetPassword} setView={setView} />}
                     
                     {view === 'signIn' && (
-                        <div className="mt-6">
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-300 dark:border-gray-600" />
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">New to the platform?</span>
-                                </div>
-                            </div>
-                            <div className="mt-6">
-                                <button type="button" onClick={onSetupCompany} className="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
-                                    Create New Company Account
-                                </button>
-                            </div>
+                        <div className="mt-8 pt-8 border-t border-white/5">
+                            <button 
+                                type="button" 
+                                onClick={onSetupCompany} 
+                                className="w-full flex justify-center items-center py-3 px-4 bg-transparent border border-white/5 rounded-xl text-[11px] font-bold text-slate-500 hover:text-white hover:border-white/20 transition-all uppercase tracking-widest"
+                            >
+                                Initiate New Organization Setup
+                            </button>
                         </div>
                     )}
-                </div>
+                </motion.div>
             </div>
             
-            <div className="mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                 <div className="text-center">
-                    <h2 className="text-base font-semibold text-teal-600 tracking-wide uppercase">Features</h2>
-                    <p className="mt-2 text-3xl font-extrabold text-gray-900 dark:text-gray-100 tracking-tight sm:text-4xl">
-                        Navigate Cybersecurity Compliance with Confidence
-                    </p>
-                    <p className="mt-5 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
-                        An interactive platform to manage, implement, and track the National Cybersecurity Authority's Essential Cybersecurity Controls (ECC).
-                    </p>
-                </div>
-                <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-                     <FeatureCard title="Interactive Controls" icon={<ShieldCheckIcon className="w-8 h-8"/>}>
-                        Easily browse, search, and understand the complete ECC framework with all implementation guidelines.
+            <div className="mt-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                     <FeatureCard title="Neural Controls" icon={<ShieldCheckIcon className="w-6 h-6"/>}>
+                        Adaptive ECC framework mapping with real-time requirement synchronization.
                     </FeatureCard>
-                    <FeatureCard title="AI-Powered Assistance" icon={<ChatBotIcon className="w-8 h-8"/>}>
-                        Engage with Noora, your AI assistant, for automated documentation, live voice assessments, and expert guidance.
+                    <FeatureCard title="Noora AI Interface" icon={<ChatBotIcon className="w-6 h-6"/>}>
+                        Voice-activated compliance auditing and automated document synthesis.
                     </FeatureCard>
-                    <FeatureCard title="Role-Based Access" icon={<UserGroupIcon className="w-8 h-8"/>}>
-                        Manage user permissions with a robust RBAC system, ensuring users only see what they need to.
+                    <FeatureCard title="Quantum RBAC" icon={<UserGroupIcon className="w-6 h-6"/>}>
+                        Cryptographically secure role assignment and granular access telemetry.
                     </FeatureCard>
-                    <FeatureCard title="Compliance Dashboard" icon={<ChartPieIcon className="w-8 h-8"/>}>
-                        Visualize your organization's compliance posture at a glance with interactive charts and reports.
+                    <FeatureCard title="Strategic Insights" icon={<ChartPieIcon className="w-6 h-6"/>}>
+                        Multi-dimensional risk visualization and predictive compliance trajectories.
                     </FeatureCard>
                 </div>
             </div>

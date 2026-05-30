@@ -56,18 +56,18 @@ const AssetFormModal: React.FC<{
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
                 <header className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{asset ? 'Edit Asset' : 'Add New Asset'}</h3>
+                    <h3 className="text-lg font-normal text-gray-900 dark:text-gray-100">{asset ? 'Edit Asset' : 'Add New Asset'}</h3>
                     <button onClick={onClose}><CloseIcon className="w-5 h-5 text-gray-500" /></button>
                 </header>
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Asset Name</label>
+                        <label className="block text-sm font-normal text-gray-700 dark:text-gray-300">Asset Name</label>
                         <input type="text" required className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2" 
                             value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
+                            <label className="block text-sm font-normal text-gray-700 dark:text-gray-300">Type</label>
                             <select className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2"
                                 value={formData.type} onChange={e => setFormData({...formData, type: e.target.value as AssetType})}>
                                 <option value="Server">Server</option>
@@ -80,7 +80,7 @@ const AssetFormModal: React.FC<{
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Criticality</label>
+                            <label className="block text-sm font-normal text-gray-700 dark:text-gray-300">Criticality</label>
                             <select className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2"
                                 value={formData.criticality} onChange={e => setFormData({...formData, criticality: e.target.value as AssetCriticality})}>
                                 <option value="Critical">Critical</option>
@@ -91,17 +91,17 @@ const AssetFormModal: React.FC<{
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">IP Address / URL</label>
+                        <label className="block text-sm font-normal text-gray-700 dark:text-gray-300">IP Address / URL</label>
                         <input type="text" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2" 
                             value={formData.ipAddress} onChange={e => setFormData({...formData, ipAddress: e.target.value})} />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
+                        <label className="block text-sm font-normal text-gray-700 dark:text-gray-300">Location</label>
                         <input type="text" className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2" 
                             value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Owner</label>
+                        <label className="block text-sm font-normal text-gray-700 dark:text-gray-300">Owner</label>
                         <input type="text" required className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2" 
                             value={formData.owner} onChange={e => setFormData({...formData, owner: e.target.value})} />
                     </div>
@@ -169,11 +169,11 @@ export const AssetInventoryPage: React.FC<AssetInventoryPageProps> = ({
         <div className="space-y-8">
             <div className="flex justify-between items-start">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Asset Inventory</h1>
+                    <h1 className="text-xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">Asset Inventory</h1>
                     <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Track and manage your organization's critical assets.</p>
                 </div>
                 {permissions.has('assets:create') && (
-                    <button onClick={() => { setEditingAsset(null); setIsModalOpen(true); }} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
+                    <button onClick={() => { setEditingAsset(null); setIsModalOpen(true); }} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
                         + Add Asset
                     </button>
                 )}
@@ -212,12 +212,12 @@ export const AssetInventoryPage: React.FC<AssetInventoryPageProps> = ({
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-900/50">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Asset Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Criticality</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Owner / Location</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Scan</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wider">Asset Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                            <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wider">Criticality</th>
+                            <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wider">Owner / Location</th>
+                            <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Scan</th>
+                            <th className="px-6 py-3 text-right text-xs font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -227,16 +227,16 @@ export const AssetInventoryPage: React.FC<AssetInventoryPageProps> = ({
                             filteredAssets.map(asset => (
                                 <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{asset.name}</div>
+                                        <div className="text-sm font-normal text-gray-900 dark:text-gray-100">{asset.name}</div>
                                         <div className="text-xs text-gray-500">{asset.ipAddress}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-normal bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                                             <ShieldCheckIcon className="w-3 h-3 mr-1"/> {asset.type}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCriticalityColor(asset.criticality)}`}>
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal ${getCriticalityColor(asset.criticality)}`}>
                                             {asset.criticality}
                                         </span>
                                     </td>
@@ -247,7 +247,7 @@ export const AssetInventoryPage: React.FC<AssetInventoryPageProps> = ({
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                         {asset.lastScanned ? new Date(asset.lastScanned).toLocaleDateString() : 'Never'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-3">
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-normal flex justify-end gap-3">
                                         {permissions.has('vapt:manage') && (
                                             <button onClick={() => onScanAsset(asset)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300" title="Scan with VAPT">
                                                 <BugAntIcon className="w-5 h-5" />

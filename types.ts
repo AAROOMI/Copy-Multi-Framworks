@@ -109,9 +109,10 @@ export interface AuditLogEntry {
 
 // --- NEW/UPDATED: User Management and RBAC System ---
 
-export type UserRole = 'Administrator' | 'CISO' | 'CTO' | 'CIO' | 'CEO' | 'Security Analyst' | 'Employee';
+export type UserRole = 'Super Admin' | 'Administrator' | 'CISO' | 'CTO' | 'CIO' | 'CEO' | 'Security Analyst' | 'Employee';
 
 export type Permission =
+  | 'superAdmin:read'
   | 'dashboard:read'
   | 'users:read'
   | 'users:create'
@@ -167,6 +168,42 @@ export interface User {
 }
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
+  'Super Admin': [
+    'superAdmin:read',
+    'dashboard:read',
+    'users:read',
+    'users:create',
+    'users:update',
+    'users:delete',
+    'documents:read',
+    'documents:approve',
+    'documents:generate',
+    'templates:read',
+    'templates:apply',
+    'navigator:read',
+    'company:read',
+    'company:update',
+    'audit:read',
+    'assessment:read',
+    'assessment:update',
+    'pdplAssessment:read',
+    'pdplAssessment:update',
+    'samaCsfAssessment:read',
+    'samaCsfAssessment:update',
+    'cmaAssessment:read',
+    'cmaAssessment:update',
+    'userProfile:read',
+    'userProfile:update',
+    'help:read',
+    'training:read',
+    'riskAssessment:read',
+    'riskAssessment:update',
+    'complianceAgent:run',
+    'integrations:manage',
+    'vapt:manage',
+    'virtualDept:manage',
+    'assets:read', 'assets:create', 'assets:update', 'assets:delete'
+  ],
   Administrator: [
     'dashboard:read',
     'users:read',
@@ -568,6 +605,111 @@ export interface Asset {
   tags?: string[];
 }
 
+// --- NEW: Enterprise GRC Agentic Team Types ---
+export type GRCMessageType = 'voice' | 'chat';
+export type GRCMessageSender = 'user' | 'agent';
+export type GRCAgentRole = 'Orchestrator' | 'CISO' | 'CIO' | 'CTO' | 'DPO' | 'Auditor' | 'Compliance Officer' | 'CEO' | 'Legal Counsel' | 'Cybersecurity Officer';
+
+export type GRCComplianceStatus = 'compliant' | 'non-compliant' | 'undetermined';
+
+export interface GRCAnalysisModels {
+    swot?: { strengths: string[], weaknesses: string[], opportunities: string[], threats: string[] };
+    pestle?: { political: string[], economic: string[], social: string[], technological: string[], legal: string[], environmental: string[] };
+    fishbone?: { category: string, causes: string[] }[];
+    bowtie?: { hazard: string, topEvent: string, threats: string[], consequences: string[], controls: string[], recovery: string[] };
+    pareto8020?: { item: string, impact: number }[];
+}
+
+export interface GRCMOM {
+    id: string;
+    meetingDate: number;
+    participants: { role: string, name: string }[];
+    discussionPoints: string[];
+    identifiedRisks: { title: string, level: 'low' | 'medium' | 'high' }[];
+    decisions: string[];
+    pendingActions: { action: string; assignee: string; dueDate: number; status: 'open' | 'closed' }[];
+}
+
+export interface GRCMeetingMessage {
+    id: string;
+    role: GRCAgentRole | 'Human';
+    senderName: string;
+    text: string;
+    timestamp: number;
+    agentId?: string;
+}
+
+export interface GRCMeetingSession {
+    id: string;
+    participants: { role: GRCAgentRole | 'Human', name: string }[];
+    transcript: GRCMeetingMessage[];
+    status: 'active' | 'concluded';
+    framework?: string;
+    mom?: GRCMOM;
+    analysis?: GRCAnalysisModels;
+}
+
+export interface GRCConversation {
+    id: string;
+    userId: string;
+    channel: GRCMessageType;
+    startedAt: number;
+    endedAt?: number;
+    companyId: string;
+}
+
+export interface GRCMessage {
+    id: string;
+    conversationId: string;
+    sender: GRCMessageSender;
+    agentId?: string;
+    text: string;
+    metadata?: any;
+    createdAt: number;
+}
+
+export interface GRCAgentDecision {
+    id: string;
+    conversationId: string;
+    agentId: string;
+    agentRole: string; // Orchestrator, DPO, Security, Auditor, Compliance
+    input: string;
+    output: string;
+    riskLevel: 'low' | 'medium' | 'high';
+    complianceStatus: GRCComplianceStatus;
+    confidence: number;
+    createdAt: number;
+}
+
+export interface GRCNFAAction {
+    id: string;
+    decisionId: string;
+    action: string;
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    status: 'open' | 'in_progress' | 'done';
+    assignedTo?: string;
+    dueDate?: number;
+    createdAt: number;
+}
+
+export interface GRCPolicy {
+    id: string;
+    name: string;
+    category: 'PDPL' | 'Security' | 'Compliance' | 'SAMA' | 'CMA' | 'ECC';
+    rule: any;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    createdAt: number;
+}
+
+export interface GRCVoiceSession {
+    id: string;
+    conversationId: string;
+    audioUrl?: string;
+    transcript?: string;
+    language?: string;
+    confidence?: number;
+}
+
 // --- NEW: Application Views ---
 // This is the centralized source of truth for all navigable pages in the app.
 export type View = 
@@ -587,11 +729,16 @@ export type View =
   | 'userManagement' 
   | 'complianceAgent' 
   | 'superAdmin' 
-  | 'sarahAgent'
+  | 'saraAgent'
   | 'integrations'
   | 'vapt'
   | 'virtualDepartment'
-  | 'assets'; // Added new view
+  | 'assets'
+  | 'virtualMeeting'
+  | 'breadcrumbDesign'
+  | 'accordionDesign'
+  | 'whiteboard'
+  | 'liveVoiceDemo'; 
 
 export interface LiveAssistantProps {
   isOpen: boolean;

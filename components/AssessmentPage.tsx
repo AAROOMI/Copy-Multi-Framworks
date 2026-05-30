@@ -28,9 +28,9 @@ const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ chi
 
 const StatCard: React.FC<{ title: string; value: string | number; description?: string }> = ({ title, value, description }) => (
     <Card>
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</h3>
-        <p className="mt-1 text-4xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
-        {description && <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{description}</p>}
+        <h3 className="text-sm font-normal text-gray-500 dark:text-gray-400 truncate uppercase tracking-wider">{title}</h3>
+        <p className="mt-1 text-xl font-normal text-gray-900 dark:text-gray-100">{value}</p>
+        {description && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{description}</p>}
     </Card>
 );
 
@@ -76,7 +76,7 @@ const StatusDistributionChart: React.FC<{ data: Record<string, number> }> = ({ d
     
     return (
         <Card>
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Status Distribution</h3>
+            <h3 className="text-base font-normal text-gray-700 dark:text-gray-200 mb-4 uppercase tracking-wide">Status Distribution</h3>
             <div className="h-64">
                 <canvas ref={canvasRef} />
             </div>
@@ -285,22 +285,22 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ assessmentData, 
         <div className="space-y-8">
             <div className="flex flex-wrap justify-between items-start gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">NCA ECC Assessment</h1>
-                    <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Analysis of the assessment against the National Cybersecurity Authority's standards.</p>
+                    <h1 className="text-xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">NCA ECC Assessment</h1>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Analysis of the assessment against the National Cybersecurity Authority's standards.</p>
                 </div>
                 {canUpdate && (
                     <div className="flex-shrink-0 flex items-center gap-2 flex-wrap">
                         {status === 'in-progress' && (
                             <>
-                                <button onClick={() => setIsVoiceAssisted(true)} className="inline-flex items-center px-4 py-2 border border-purple-300 dark:border-purple-600 text-sm font-medium rounded-md shadow-sm text-purple-700 dark:text-purple-200 bg-purple-50 dark:bg-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-900">
+                                <button onClick={() => setIsVoiceAssisted(true)} className="inline-flex items-center px-4 py-2 border border-purple-300 dark:border-purple-600 text-sm font-normal rounded-md shadow-sm text-purple-700 dark:text-purple-200 bg-purple-50 dark:bg-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-900">
                                     Start AI Voice Assessment
                                 </button>
-                                <button onClick={onComplete} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
+                                <button onClick={onComplete} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
                                     Complete Assessment
                                 </button>
                             </>
                         )}
-                        <button onClick={onInitiate} className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <button onClick={onInitiate} className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-normal rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                             Initiate New Assessment
                         </button>
                     </div>
@@ -309,14 +309,14 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ assessmentData, 
             
             {status === 'implementation' && (
                 <div className="p-4 bg-green-50 dark:bg-green-900/50 border-l-4 border-green-400">
-                    <h3 className="font-bold text-green-800 dark:text-green-200">Implementation Phase</h3>
+                    <h3 className="font-normal text-green-800 dark:text-green-200">Implementation Phase</h3>
                     <p className="text-sm text-green-700 dark:text-green-300">This assessment has been approved and is now in the implementation phase.</p>
                 </div>
             )}
 
             {isEditable && (
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/50 border-l-4 border-blue-400">
-                    <h3 className="font-bold text-blue-800 dark:text-blue-200">Assessment in Progress</h3>
+                    <h3 className="font-normal text-blue-800 dark:text-blue-200">Assessment in Progress</h3>
                     <p className="text-sm text-blue-700 dark:text-blue-300">You are in edit mode. Changes are saved automatically as you update fields. Click "Complete Assessment" when you are finished.</p>
                 </div>
             )}
@@ -361,7 +361,7 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ assessmentData, 
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={!isEditable || !canUpdate}
-                                className="w-full h-full inline-flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full h-full inline-flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <UploadIcon className="w-5 h-5" />
                                 <span>Import CSV</span>
@@ -375,7 +375,7 @@ export const AssessmentPage: React.FC<AssessmentPageProps> = ({ assessmentData, 
                             />
                             <button
                                 onClick={handleExportCSV}
-                                className="w-full h-full inline-flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 dark:focus:ring-offset-gray-800"
+                                className="w-full h-full inline-flex items-center justify-center gap-2 px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 dark:focus:ring-offset-gray-800"
                             >
                                 <DownloadIcon className="w-5 h-5" />
                                 <span>Export CSV</span>

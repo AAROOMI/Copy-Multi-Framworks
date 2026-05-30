@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";
+import { AIService } from '../services/aiService';
 import { BugAntIcon, ExclamationTriangleIcon } from './Icons';
 import type { VaptFinding, AuditAction, Permission, Asset } from '../types';
 
@@ -9,8 +10,6 @@ interface VaptOrchestratorPageProps {
     addAuditLog: (action: AuditAction, details: string) => void;
     assets?: Asset[]; // Pass assets for selection
 }
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // --- Mock Tools Implementation (Same as before) ---
 const mockStartScan = async (params: any) => {
@@ -104,21 +103,30 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
         }
     };
 
-    const runAgentTurn = async (userMessage: string) => {
+    const runAgentTurn = async (userMessageText: string) => {
         setIsThinking(true);
         try {
-            const systemInstruction = `You are "VAPT Orchestrator". Run authorized security testing for assets: ${scanConfig.scope}.`;
-            const chatHistory = messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }));
-            const chat = ai.chats.create({
-                model: 'gemini-3-pro-preview',
-                config: { systemInstruction, tools: [{ functionDeclarations: tools }], thinkingConfig: { thinkingBudget: 32768 } },
-                history: chatHistory.slice(0, -1)
+            const systemInstructionLocal = `You are "VAPT Orchestrator". Run authorized security testing for assets: ${scanConfig.scope}.`;
+            const chatHistory = messages.map(m => ({ 
+                role: m.role, 
+                parts: [{ text: m.text }] 
+            }));
+            
+            const chat = AIService.startChat({
+                model: 'gemini-3-flash-preview',
+                systemInstruction: systemInstructionLocal,
+                history: chatHistory,
+                tools: [{ functionDeclarations: tools }]
             });
 
-            const result = await chat.sendMessage({ message: userMessage });
-            const call = result.functionCalls?.[0];
+            let response = await chat.sendMessage({ message: userMessageText });
             
-            if (call) {
+            // Check for function calls
+            const parts = response.candidates?.[0]?.content?.parts || [];
+            const functionCallPart = parts.find(p => p.functionCall);
+            
+            if (functionCallPart?.functionCall) {
+                const call = functionCallPart.functionCall;
                 let toolResult;
                 if (call.name === 'vapt_start_scan') toolResult = await mockStartScan(call.args);
                 else if (call.name === 'vapt_get_scan_status') toolResult = await mockGetScanStatus(call.args as any);
@@ -126,13 +134,23 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
                 else if (call.name === 'vapt_stop_scan') toolResult = await mockStopScan(call.args as any);
                 else if (call.name === 'vapt_generate_report') toolResult = await mockGenerateReport(call.args as any);
 
-                const nextResult = await chat.sendMessage({ content: { role: 'function', parts: [{ functionResponse: { name: call.name, response: { result: toolResult } } }] } });
+                const nextResult = await chat.sendMessage({
+                    message: [
+                        {
+                            functionResponse: {
+                                name: call.name,
+                                response: { result: toolResult }
+                            }
+                        }
+                    ]
+                });
                 setMessages(prev => [...prev, { role: 'model', text: nextResult.text || "Action completed." }]);
                 if (call.name === 'vapt_start_scan') setScanData(toolResult);
             } else {
-                setMessages(prev => [...prev, { role: 'model', text: result.text || "I'm not sure how to proceed." }]);
+                setMessages(prev => [...prev, { role: 'model', text: response.text || "I'm not sure how to proceed." }]);
             }
         } catch (error: any) {
+            console.error("VAPT Agent Error:", error);
             setMessages(prev => [...prev, { role: 'model', text: "System Error: Unable to complete VAPT operation." }]);
         } finally {
             setIsThinking(false);
@@ -149,17 +167,17 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
     };
 
     if (!permissions.has('vapt:manage')) {
-        return <div className="text-center p-8"><h1 className="text-2xl font-bold">Access Denied</h1></div>;
+        return <div className="text-center p-8"><h1 className="text-lg font-normal">Access Denied</h1></div>;
     }
 
     return (
         <div className="space-y-6 h-full flex flex-col">
             <header className="flex-shrink-0">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <h1 className="text-xl font-normal text-gray-900 dark:text-white flex items-center gap-3">
                     <BugAntIcon className="w-8 h-8 text-teal-500" />
                     VAPT Orchestrator
                 </h1>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">Enterprise Vulnerability Assessment & Penetration Testing Automation</p>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Enterprise Vulnerability Assessment & Penetration Testing Automation</p>
             </header>
 
             {!isAuthorized && messages.length === 0 ? (
@@ -168,8 +186,8 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
                         <div className="flex items-start gap-4 mb-6">
                             <ExclamationTriangleIcon className="w-8 h-8 text-red-600 flex-shrink-0" />
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Authorization Required</h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                                <h2 className="text-lg font-normal text-gray-900 dark:text-white">Authorization Required</h2>
+                                <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
                                     Authorization is mandatory for automated security testing.
                                 </p>
                             </div>
@@ -177,7 +195,7 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
 
                         <div className="space-y-4 mb-8">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Target Scope</label>
+                                <label className="block text-sm font-normal text-gray-700 dark:text-gray-300">Target Scope</label>
                                 <div className="flex gap-2">
                                     <input 
                                         type="text" 
@@ -203,7 +221,7 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
 
                         <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-md border border-red-100 dark:border-red-900/50">
                             <input type="checkbox" id="authConfirm" checked={isAuthorized} onChange={handleAuthorization} className="h-5 w-5 text-red-600 focus:ring-red-500 border-gray-300 rounded" />
-                            <label htmlFor="authConfirm" className="text-sm font-medium text-red-800 dark:text-red-200">
+                            <label htmlFor="authConfirm" className="text-sm font-normal text-red-800 dark:text-red-200">
                                 I confirm I have written authorization from the asset owner to perform these tests.
                             </label>
                         </div>
@@ -216,7 +234,7 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
                                     runAgentTurn(prompt);
                                 }}
                                 disabled={!isAuthorized || !scanConfig.scope}
-                                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-md shadow-sm disabled:opacity-50 transition-colors"
+                                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-normal rounded-md shadow-sm disabled:opacity-50 transition-colors"
                             >
                                 Initialize VAPT Agent
                             </button>
@@ -228,13 +246,13 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
                     {/* Left: Chat / Orchestrator */}
                     <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
-                            <h3 className="font-semibold text-gray-800 dark:text-gray-200">Orchestrator Console</h3>
+                            <h3 className="font-normal text-gray-800 dark:text-gray-200">Orchestrator Console</h3>
                             {scanData && <span className="text-xs font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded">{scanData.status.toUpperCase()}</span>}
                         </div>
                         <div className="flex-grow overflow-y-auto p-4 space-y-4 bg-gray-100 dark:bg-gray-900 font-mono text-sm" ref={chatContainerRef}>
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`p-3 rounded-lg ${msg.role === 'user' ? 'bg-white dark:bg-gray-800 ml-8 border border-gray-200 dark:border-gray-700' : 'bg-black text-green-400 mr-8'}`}>
-                                    <span className="font-bold block mb-1 opacity-50 text-xs uppercase">{msg.role === 'user' ? 'Operator' : 'VAPT Agent'}</span>
+                                    <span className="font-normal block mb-1 opacity-50 text-xs uppercase">{msg.role === 'user' ? 'Operator' : 'VAPT Agent'}</span>
                                     {msg.text}
                                 </div>
                             ))}
@@ -250,15 +268,15 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
                     <div className="lg:col-span-2 flex flex-col gap-6 overflow-y-auto">
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden flex-grow">
                             <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                                <h3 className="font-semibold text-gray-800 dark:text-gray-200">Live Findings</h3>
+                                <h3 className="font-normal text-gray-800 dark:text-gray-200">Live Findings</h3>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-700">
                                         <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Severity</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Vulnerability</th>
+                                            <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Severity</th>
+                                            <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Asset</th>
+                                            <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Vulnerability</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -268,7 +286,7 @@ export const VaptOrchestratorPage: React.FC<VaptOrchestratorPageProps> = ({ perm
                                             findings.map((finding) => (
                                                 <tr key={finding.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${finding.severity === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>{finding.severity.toUpperCase()}</span>
+                                                        <span className={`px-2 inline-flex text-xs leading-5 font-normal rounded-full ${finding.severity === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>{finding.severity.toUpperCase()}</span>
                                                     </td>
                                                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{finding.asset}</td>
                                                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{finding.title}</td>

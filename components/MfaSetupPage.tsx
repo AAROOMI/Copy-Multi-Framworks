@@ -73,7 +73,7 @@ export const MfaSetupPage: React.FC<MfaSetupPageProps> = ({ user, companyName, o
             >
                 {theme === 'light' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
             </button>
-            <button onClick={onCancel} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-teal-600">
+            <button onClick={onCancel} className="text-sm font-normal text-gray-600 dark:text-gray-300 hover:text-teal-600">
                 Cancel Setup
             </button>
         </div>
@@ -91,7 +91,7 @@ export const MfaSetupPage: React.FC<MfaSetupPageProps> = ({ user, companyName, o
             <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-gray-200 dark:border-gray-700">
                 <div className="space-y-6">
                     <div className="text-center">
-                        <p className="font-semibold text-gray-800 dark:text-gray-200">Step 1: Scan QR Code</p>
+                        <p className="font-normal text-gray-800 dark:text-gray-200">Step 1: Scan QR Code</p>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                             Open your authenticator app (e.g., Google Authenticator, Authy) and scan the image below.
                         </p>
@@ -111,7 +111,7 @@ export const MfaSetupPage: React.FC<MfaSetupPageProps> = ({ user, companyName, o
                     </div>
 
                     <div className="text-center border-t border-gray-200 dark:border-gray-700 pt-6">
-                        <p className="font-semibold text-gray-800 dark:text-gray-200">Step 2: Manual Entry</p>
+                        <p className="font-normal text-gray-800 dark:text-gray-200">Step 2: Manual Entry</p>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                            If you can't scan the code, manually enter this setup key into your app.
                         </p>
@@ -127,8 +127,8 @@ export const MfaSetupPage: React.FC<MfaSetupPageProps> = ({ user, companyName, o
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6 border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
                     <div>
-                        <label htmlFor="code" className="block text-center text-sm font-medium text-gray-700 dark:text-gray-300">
-                            <span className="font-semibold text-base text-gray-800 dark:text-gray-200 block mb-1">Step 3: Verify Code</span>
+                        <label htmlFor="code" className="block text-center text-sm font-normal text-gray-700 dark:text-gray-300">
+                            <span className="font-normal text-base text-gray-800 dark:text-gray-200 block mb-1">Step 3: Verify Code</span>
                             <span className="text-gray-600 dark:text-gray-400 font-normal">Enter the 6-digit code from your authenticator app to complete setup.</span>
                         </label>
                         <div className="mt-2">
@@ -139,7 +139,7 @@ export const MfaSetupPage: React.FC<MfaSetupPageProps> = ({ user, companyName, o
                     </div>
                     {error && <p className="text-sm text-center text-red-500 dark:text-red-400">{error}</p>}
                     <div>
-                        <button type="submit" disabled={isVerifying} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400">
+                        <button type="submit" disabled={isVerifying} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-normal text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400">
                             {isVerifying ? 'Verifying...' : 'Verify & Enable MFA'}
                         </button>
                     </div>

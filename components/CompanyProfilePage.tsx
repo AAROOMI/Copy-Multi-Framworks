@@ -20,7 +20,7 @@ const LicenseStatus: React.FC<{ license?: License }> = ({ license }) => {
     if (!license || license.status === 'inactive') {
         return (
             <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/50 border border-yellow-200 dark:border-yellow-500/50 rounded-md">
-                <p className="font-semibold text-yellow-800 dark:text-yellow-200">No Active License</p>
+                <p className="font-normal text-yellow-800 dark:text-yellow-200">No Active License</p>
                 <p className="text-sm text-yellow-700 dark:text-yellow-300">Please activate a license key to enable the application.</p>
             </div>
         );
@@ -33,16 +33,16 @@ const LicenseStatus: React.FC<{ license?: License }> = ({ license }) => {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-baseline">
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</span>
-                <span className={`font-bold text-lg ${statusColor}`}>{statusText}</span>
+                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">Status</span>
+                <span className={`font-normal text-lg ${statusColor}`}>{statusText}</span>
             </div>
             <div className="flex justify-between items-baseline">
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Plan</span>
-                <span className="font-semibold text-gray-800 dark:text-gray-200 capitalize">{license.tier}</span>
+                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">Plan</span>
+                <span className="font-normal text-gray-800 dark:text-gray-200 capitalize">{license.tier}</span>
             </div>
              <div className="flex justify-between items-baseline">
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Expires On</span>
-                <span className="font-semibold text-gray-800 dark:text-gray-200">{new Date(license.expiresAt).toLocaleDateString()}</span>
+                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">Expires On</span>
+                <span className="font-normal text-gray-800 dark:text-gray-200">{new Date(license.expiresAt).toLocaleDateString()}</span>
             </div>
         </div>
     );
@@ -78,7 +78,7 @@ const GeneratedKeyModal: React.FC<GeneratedKeyModalProps> = ({ generatedKey, onC
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[150] flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
                 <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">License Key Generated</h2>
+                    <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100">License Key Generated</h2>
                     <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
                         <CloseIcon className="w-6 h-6 text-gray-500" />
                     </button>
@@ -88,7 +88,7 @@ const GeneratedKeyModal: React.FC<GeneratedKeyModalProps> = ({ generatedKey, onC
                         Your new license key has been created. You can copy it to share or activate it immediately for this company.
                     </p>
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">Generated Key</label>
+                        <label className="block text-xs font-normal text-gray-500 dark:text-gray-400">Generated Key</label>
                         <div className="mt-1 flex items-center space-x-2 p-2 rounded-md bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600">
                             <input type="text" readOnly value={generatedKey.key} className="flex-grow bg-transparent text-xs font-mono text-gray-600 dark:text-gray-300 focus:outline-none" />
                             <button type="button" onClick={handleCopy} className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
@@ -97,17 +97,17 @@ const GeneratedKeyModal: React.FC<GeneratedKeyModalProps> = ({ generatedKey, onC
                         </div>
                     </div>
                     <div className="flex justify-between items-baseline pt-2">
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Plan Tier</span>
-                        <span className="font-semibold text-gray-800 dark:text-gray-200 capitalize">{generatedKey.tier}</span>
+                        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">Plan Tier</span>
+                        <span className="font-normal text-gray-800 dark:text-gray-200 capitalize">{generatedKey.tier}</span>
                     </div>
                     <div className="flex justify-between items-baseline">
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Expires On</span>
-                        <span className="font-semibold text-gray-800 dark:text-gray-200">{new Date(generatedKey.expiresAt).toLocaleDateString()}</span>
+                        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">Expires On</span>
+                        <span className="font-normal text-gray-800 dark:text-gray-200">{new Date(generatedKey.expiresAt).toLocaleDateString()}</span>
                     </div>
                 </main>
                 <footer className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 flex justify-end gap-3 rounded-b-lg">
-                    <button type="button" onClick={onClose} className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-50">Close</button>
-                    <button type="button" onClick={handleActivate} className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">Activate Now</button>
+                    <button type="button" onClick={onClose} className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-50">Close</button>
+                    <button type="button" onClick={handleActivate} className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-normal rounded-md text-white bg-teal-600 hover:bg-teal-700">Activate Now</button>
                 </footer>
             </div>
         </div>
@@ -139,7 +139,7 @@ const LicenseGenerator: React.FC<LicenseGeneratorProps> = ({ company, onKeyGener
     
     return (
         <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">License Key Generator</h3>
+            <h3 className="text-lg font-normal text-gray-800 dark:text-gray-100 mb-4">License Key Generator</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Create a new license key for this company. The generated key can then be activated below.
             </p>
@@ -149,7 +149,7 @@ const LicenseGenerator: React.FC<LicenseGeneratorProps> = ({ company, onKeyGener
                         key={label}
                         type="button"
                         onClick={() => generateKey(tier, months)}
-                        className="w-full text-center py-2 px-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                        className="w-full text-center py-2 px-3 border border-gray-300 dark:border-gray-600 text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                     >
                         Generate {label}
                     </button>
@@ -285,11 +285,11 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ company,
     <div className="space-y-8">
         <div className="flex justify-between items-start">
             <div>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Company Profile</h1>
-                <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Manage your company information, logo, and subscription.</p>
+                <h1 className="text-1xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">Company Profile</h1>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Manage your company information, logo, and subscription.</p>
             </div>
              {currentUser.role === 'Administrator' && (
-                <button onClick={() => setIsCreateModalOpen(true)} className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                <button onClick={() => setIsCreateModalOpen(true)} className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                     Create New Company
                 </button>
              )}
@@ -302,35 +302,35 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ company,
                          <div className="space-y-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
-                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Company Name</label>
+                                    <label htmlFor="name" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Company Name</label>
                                     <input type="text" name="name" id="name" value={formData.name} onChange={handleChange} required disabled={!isEditing} className="mt-1 block w-full input-style" />
                                 </div>
                                 <div>
-                                    <label htmlFor="cisoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">CISO Name</label>
+                                    <label htmlFor="cisoName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">CISO Name</label>
                                     <input type="text" name="cisoName" id="cisoName" value={formData.cisoName} onChange={handleChange} required disabled={!isEditing} className="mt-1 block w-full input-style" />
                                 </div>
                                 <div>
-                                    <label htmlFor="ceoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">CEO Name</label>
+                                    <label htmlFor="ceoName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">CEO Name</label>
                                     <input type="text" name="ceoName" id="ceoName" value={formData.ceoName} onChange={handleChange} required disabled={!isEditing} className="mt-1 block w-full input-style" />
                                 </div>
                                 <div>
-                                    <label htmlFor="cioName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">CIO Name</label>
+                                    <label htmlFor="cioName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">CIO Name</label>
                                     <input type="text" name="cioName" id="cioName" value={formData.cioName} onChange={handleChange} required disabled={!isEditing} className="mt-1 block w-full input-style" />
                                 </div>
                                 <div>
-                                    <label htmlFor="ctoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">CTO Name</label>
+                                    <label htmlFor="ctoName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">CTO Name</label>
                                     <input type="text" name="ctoName" id="ctoName" value={formData.ctoName} onChange={handleChange} required disabled={!isEditing} className="mt-1 block w-full input-style" />
                                 </div>
                                 <div>
-                                    <label htmlFor="cybersecurityOfficerName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Cybersecurity Officer</label>
+                                    <label htmlFor="cybersecurityOfficerName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Cybersecurity Officer</label>
                                     <input type="text" name="cybersecurityOfficerName" id="cybersecurityOfficerName" value={formData.cybersecurityOfficerName} onChange={handleChange} required disabled={!isEditing} className="mt-1 block w-full input-style" />
                                 </div>
                                 <div>
-                                    <label htmlFor="dpoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Data Protection Officer (DPO)</label>
+                                    <label htmlFor="dpoName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Data Protection Officer (DPO)</label>
                                     <input type="text" name="dpoName" id="dpoName" value={formData.dpoName} onChange={handleChange} required disabled={!isEditing} className="mt-1 block w-full input-style" />
                                 </div>
                                 <div>
-                                    <label htmlFor="complianceOfficerName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Compliance Officer</label>
+                                    <label htmlFor="complianceOfficerName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Compliance Officer</label>
                                     <input type="text" name="complianceOfficerName" id="complianceOfficerName" value={formData.complianceOfficerName} onChange={handleChange} required disabled={!isEditing} className="mt-1 block w-full input-style" />
                                 </div>
                             </div>
@@ -340,11 +340,11 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ company,
                         <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex justify-end items-center">
                             {isEditing ? (
                                 <>
-                                   {company && <button type="button" onClick={() => { setIsEditing(false); if(company) setFormData(company); }} className="mr-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-50 dark:hover:bg-gray-500">Cancel</button>}
-                                    <button type="submit" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">Save Profile</button>
+                                   {company && <button type="button" onClick={() => { setIsEditing(false); if(company) setFormData(company); }} className="mr-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-50 dark:hover:bg-gray-500">Cancel</button>}
+                                    <button type="submit" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-normal rounded-md text-white bg-teal-600 hover:bg-teal-700">Save Profile</button>
                                 </>
                             ) : (
-                                <button type="button" onClick={() => setIsEditing(true)} className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
+                                <button type="button" onClick={() => setIsEditing(true)} className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-normal rounded-md text-white bg-teal-600 hover:bg-teal-700">
                                     Edit Profile
                                 </button>
                             )}
@@ -354,7 +354,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ company,
             </div>
             <div className="space-y-6">
                 <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">Company Logo</label>
+                    <label className="block text-sm font-normal text-gray-700 dark:text-gray-300 mb-2 text-center">Company Logo</label>
                     <div className="flex flex-col items-center">
                         <div className="w-40 h-40 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600">
                         {formData.logo ? (
@@ -365,7 +365,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ company,
                         </div>
                         {isEditing && (
                             <>
-                                <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-4 text-sm font-medium text-teal-600 dark:text-teal-400 hover:text-teal-500">
+                                <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-4 text-sm font-normal text-teal-600 dark:text-teal-400 hover:text-teal-500">
                                     Upload Logo
                                 </button>
                                 <input ref={fileInputRef} type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={handleLogoUpload} className="hidden" />
@@ -380,11 +380,11 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ company,
                         )}
 
                         <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">License Management</h3>
+                            <h3 className="text-lg font-normal text-gray-800 dark:text-gray-100 mb-4">License Management</h3>
                             <LicenseStatus license={company?.license} />
                             {canEdit && (
                                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                     <label htmlFor="licenseKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Activate New License</label>
+                                     <label htmlFor="licenseKey" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Activate New License</label>
                                      <input 
                                         type="text" 
                                         name="licenseKey" 
@@ -398,7 +398,7 @@ export const CompanyProfilePage: React.FC<CompanyProfilePageProps> = ({ company,
                                         type="button" 
                                         onClick={() => handleActivateLicense(newLicenseKey)}
                                         disabled={!newLicenseKey}
-                                        className="mt-3 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400"
+                                        className="mt-3 w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-normal rounded-md text-white bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400"
                                     >
                                         Activate License
                                     </button>

@@ -51,7 +51,7 @@ export const AuditLogPage: React.FC<{ auditLog: AuditLogEntry[] }> = ({ auditLog
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Audit Log</h1>
+                <h1 className="text-xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">Audit Log</h1>
                 <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Review all significant actions performed within the application.</p>
             </div>
 
@@ -71,7 +71,7 @@ export const AuditLogPage: React.FC<{ auditLog: AuditLogEntry[] }> = ({ auditLog
                         />
                     </div>
                     <div className="flex items-center gap-2">
-                         <label htmlFor="startDate" className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">From:</label>
+                         <label htmlFor="startDate" className="text-sm font-normal text-gray-700 dark:text-gray-300 shrink-0">From:</label>
                          <input
                             type="date"
                             id="startDate"
@@ -81,7 +81,7 @@ export const AuditLogPage: React.FC<{ auditLog: AuditLogEntry[] }> = ({ auditLog
                          />
                     </div>
                      <div className="flex items-center gap-2">
-                        <label htmlFor="endDate" className="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">To:</label>
+                        <label htmlFor="endDate" className="text-sm font-normal text-gray-700 dark:text-gray-300 shrink-0">To:</label>
                         <input
                             type="date"
                             id="endDate"
@@ -100,10 +100,10 @@ export const AuditLogPage: React.FC<{ auditLog: AuditLogEntry[] }> = ({ auditLog
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/4">Timestamp</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">User</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">Action</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Details</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/4">Timestamp</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">User</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/6">Action</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Details</th>
                                 </tr>
                             </thead>
                              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -112,11 +112,11 @@ export const AuditLogPage: React.FC<{ auditLog: AuditLogEntry[] }> = ({ auditLog
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             {new Date(log.timestamp).toLocaleString()}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-normal text-gray-900 dark:text-gray-100">
                                             {log.userName}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200">
+                                            <span className="px-2 inline-flex text-xs leading-5 font-normal rounded-full bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200">
                                                 {formatAction(log.action)}
                                             </span>
                                         </td>
@@ -143,10 +143,10 @@ export const AuditLogPage: React.FC<{ auditLog: AuditLogEntry[] }> = ({ auditLog
                         Page {currentPage} of {totalPages}
                     </span>
                     <div className="flex items-center gap-2">
-                        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
+                        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border border-gray-300 dark:border-gray-600 text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
                             Previous
                         </button>
-                        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
+                        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 border border-gray-300 dark:border-gray-600 text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
                             Next
                         </button>
                     </div>

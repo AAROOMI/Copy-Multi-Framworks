@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, Type, FunctionDeclaration } from '@google/genai';
-import type { TrainingCourse, UserTrainingProgress, Lesson } from '../types';
+import { AIService } from '../services/aiService';
 import { CloseIcon, MicrophoneIcon } from './Icons';
+import { Modality, Type, FunctionDeclaration, LiveServerMessage } from '@google/genai';
+import { type TrainingCourse, type UserTrainingProgress } from '../types';
 
 const nooraAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230d9488'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
 
@@ -55,7 +56,6 @@ interface TrainingAssistantProps {
   onSelectCourse: (course: TrainingCourse) => void;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 let nextStartTime = 0;
 
 export const TrainingAssistant: React.FC<TrainingAssistantProps> = ({ isOpen, onClose, courses, userProgress, onUpdateProgress, onSelectCourse }) => {
@@ -65,7 +65,7 @@ export const TrainingAssistant: React.FC<TrainingAssistantProps> = ({ isOpen, on
     const conversationRef = useRef<{ speaker: 'user' | 'assistant', text: string, id: string }[]>([]);
     const currentTurnId = useRef<string | null>(null);
 
-    const sessionPromise = useRef<Promise<LiveSession> | null>(null);
+    const sessionPromise = useRef<Promise<any> | null>(null);
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
     const sources = useRef(new Set<AudioBufferSourceNode>());
@@ -156,8 +156,8 @@ export const TrainingAssistant: React.FC<TrainingAssistantProps> = ({ isOpen, on
                     - After the user completes a lesson or quiz, use \`complete_lesson\` to save their progress.
                     - Always be encouraging and helpful.`;
                     
-                    sessionPromise.current = ai.live.connect({
-                        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                    sessionPromise.current = AIService.getAI().live.connect({
+                        model: 'gemini-3.1-flash-live-preview',
                         callbacks: {
                             onopen: () => {
                                 setStatus('listening');
@@ -165,11 +165,10 @@ export const TrainingAssistant: React.FC<TrainingAssistantProps> = ({ isOpen, on
                                 scriptProcessorRef.current = inputAudioContextRef.current!.createScriptProcessor(4096, 1, 1);
                                 scriptProcessorRef.current.onaudioprocess = (e) => {
                                     const inputData = e.inputBuffer.getChannelData(0);
-                                    const pcmBlob: Blob = {
-                                        data: encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer)),
-                                        mimeType: 'audio/pcm;rate=16000',
-                                    };
-                                    sessionPromise.current?.then(session => session.sendRealtimeInput({ media: pcmBlob }));
+                                    const pcmData = encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer));
+                                    sessionPromise.current?.then(session => session.sendRealtimeInput({ 
+                                        audio: { data: pcmData, mimeType: 'audio/pcm;rate=16000' } 
+                                    }));
                                 };
                                 source.connect(scriptProcessorRef.current);
                                 scriptProcessorRef.current.connect(inputAudioContextRef.current!.destination);
@@ -275,7 +274,6 @@ export const TrainingAssistant: React.FC<TrainingAssistantProps> = ({ isOpen, on
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
                             systemInstruction,
                             tools: [{ functionDeclarations }],
-                            languageCodes: ['en-US', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA'],
                         },
                     });
                 } catch (err: any) {
@@ -306,7 +304,7 @@ export const TrainingAssistant: React.FC<TrainingAssistantProps> = ({ isOpen, on
                      <div className="flex items-center">
                         <img src={nooraAvatar} alt="Noora" className="w-10 h-10 rounded-full mr-3" />
                         <div>
-                            <h2 className="font-bold text-lg text-gray-800 dark:text-gray-100">AI Training Mentor</h2>
+                            <h2 className="font-normal text-lg text-gray-800 dark:text-gray-100">AI Training Mentor</h2>
                             <p className="text-xs text-gray-500 dark:text-gray-400">Live Voice Assistant</p>
                         </div>
                     </div>
@@ -349,7 +347,7 @@ export const TrainingAssistant: React.FC<TrainingAssistantProps> = ({ isOpen, on
                                 ${status === 'thinking' ? 'border-purple-400' : ''}
                             `}></div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 capitalize">{status}</p>
+                        <p className="text-sm font-normal text-gray-600 dark:text-gray-400 capitalize">{status}</p>
                         {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
                     </div>
                 </main>

@@ -57,7 +57,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
           {isCopied ? (
             <>
               <CheckIcon className="w-4 h-4 mr-1 text-green-500" />
-              <span className="text-green-500 font-semibold">Copied!</span>
+              <span className="text-green-500 font-normal">Copied!</span>
             </>
           ) : (
             <>
@@ -96,13 +96,13 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
       aria-live="polite"
     >
       <div className="flex items-baseline justify-between mb-4">
-        <h4 className="text-md font-semibold text-teal-800 dark:text-teal-300 font-mono">{control.id}</h4>
+        <h4 className="text-md font-normal text-teal-800 dark:text-teal-300 font-mono">{control.id}</h4>
         <div className="flex items-center gap-2 relative">
             {/* Agentic Audit Button */}
             {existingDoc && (
                 <button
                     onClick={(e) => { e.stopPropagation(); setIsAuditModalOpen(true); }}
-                    className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 transition-colors mr-2"
+                    className="flex items-center gap-1 text-xs font-normal px-3 py-1.5 rounded-md bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 transition-colors mr-2"
                     title="Validate compliance with AI Agents"
                 >
                     <ShieldCheckIcon className="w-3 h-3" />
@@ -116,7 +116,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
                     <button 
                         onClick={handleGenerateClick}
                         disabled={isGenerating}
-                        className={`flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-l-md transition-colors border-r border-black/10 dark:border-white/10 disabled:opacity-70 disabled:cursor-not-allowed ${existingDoc ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600' : 'text-white bg-purple-600 hover:bg-purple-700'}`}
+                        className={`flex items-center gap-1 text-xs font-normal px-3 py-1.5 rounded-l-md transition-colors border-r border-black/10 dark:border-white/10 disabled:opacity-70 disabled:cursor-not-allowed ${existingDoc ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600' : 'text-white bg-purple-600 hover:bg-purple-700'}`}
                         title="Quick Generate (Standard Tone/Length)"
                     >
                         {isGenerating ? (
@@ -143,9 +143,9 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
                     {/* Settings Dropdown Content */}
                     {showGenSettings && (
                         <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 p-4" onClick={(e) => e.stopPropagation()}>
-                            <h5 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">AI Generation Settings</h5>
+                            <h5 className="text-xs font-normal text-gray-500 dark:text-gray-400 uppercase mb-3">AI Generation Settings</h5>
                             <div className="mb-3">
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Tone</label>
+                                <label className="block text-xs font-normal text-gray-700 dark:text-gray-300 mb-1">Tone</label>
                                 <select 
                                     value={selectedTone} 
                                     onChange={(e) => setSelectedTone(e.target.value as PolicyTone)}
@@ -157,7 +157,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
                                 </select>
                             </div>
                             <div className="mb-4">
-                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Length</label>
+                                <label className="block text-xs font-normal text-gray-700 dark:text-gray-300 mb-1">Length</label>
                                 <select 
                                     value={selectedLength} 
                                     onChange={(e) => setSelectedLength(e.target.value as PolicyLength)}
@@ -171,7 +171,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
                             <button
                                 onClick={handleGenerateClick}
                                 disabled={isGenerating}
-                                className="w-full inline-flex justify-center items-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full inline-flex justify-center items-center px-3 py-2 border border-transparent text-xs font-normal rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {isGenerating ? (
                                     <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -197,7 +197,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
       <div className="space-y-6">
         <div className="space-y-2">
             <div className="flex justify-between items-center">
-                <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-300">Description</h5>
+                <h5 className="text-sm font-normal text-gray-600 dark:text-gray-300">Description</h5>
                 <CopyButton textToCopy={control.description} sectionId={`desc-${control.id}`} />
             </div>
             <p className="text-gray-700 dark:text-gray-200 text-sm">{control.description}</p>
@@ -205,7 +205,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
 
         {control.relevantTools && control.relevantTools.length > 0 && (
             <div className="space-y-2 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-100 dark:border-blue-800">
-                <h5 className="text-xs font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Relevant Cybersecurity Tools</h5>
+                <h5 className="text-xs font-normal text-blue-700 dark:text-blue-300 uppercase tracking-wide">Relevant Cybersecurity Tools</h5>
                 <ul className="list-none space-y-1">
                     {control.relevantTools.map((tool, idx) => (
                         <li key={idx} className="text-xs text-blue-800 dark:text-blue-200 flex items-start">
@@ -218,7 +218,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
 
         <div className="space-y-2">
              <div className="flex justify-between items-center">
-                <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-300">Implementation Requirements Checklist (NCA Guide)</h5>
+                <h5 className="text-sm font-normal text-gray-600 dark:text-gray-300">Implementation Requirements Checklist (NCA Guide)</h5>
                 <CopyButton textToCopy={`- ${control.implementationGuidelines.join('\n- ')}`} sectionId={`impl-${control.id}`} />
             </div>
             <ul className="space-y-2">
@@ -235,7 +235,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
 
         <div className="space-y-2">
             <div className="flex justify-between items-center">
-                <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-300">Expected Deliverables</h5>
+                <h5 className="text-sm font-normal text-gray-600 dark:text-gray-300">Expected Deliverables</h5>
                 <CopyButton textToCopy={`- ${control.expectedDeliverables.join('\n- ')}`} sectionId={`deli-${control.id}`} />
             </div>
             <div className="bg-gray-50 dark:bg-gray-700/30 rounded-md p-3 border border-gray-100 dark:border-gray-700">
@@ -252,7 +252,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setIsHistoryVisible(!isHistoryVisible)}
-              className="w-full flex justify-between items-center text-left text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+              className="w-full flex justify-between items-center text-left text-sm font-normal text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
               aria-expanded={isHistoryVisible}
             >
               <span>Version History</span>
@@ -265,7 +265,7 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
                     <div className="absolute top-1 -left-[26px] h-3 w-3 bg-gray-300 dark:bg-gray-500 rounded-full border-4 border-white dark:border-gray-800"></div>
                     <div className="pl-4">
                         <div className="flex items-baseline justify-between">
-                            <h6 className="font-semibold text-gray-700 dark:text-gray-300">Version {entry.version}</h6>
+                            <h6 className="font-normal text-gray-700 dark:text-gray-300">Version {entry.version}</h6>
                             <p className="text-sm text-gray-500 dark:text-gray-400">{entry.date}</p>
                         </div>
                         <ul className="list-disc list-inside space-y-1 mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -335,9 +335,9 @@ export const SubdomainAccordion: React.FC<SubdomainAccordionProps> = ({
             className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         >
             <div className="flex items-center text-left">
-                <span className="font-mono text-sm font-bold text-gray-500 dark:text-gray-400 mr-3">{subdomain.id}</span>
+                <span className="font-mono text-sm font-normal text-gray-500 dark:text-gray-400 mr-3">{subdomain.id}</span>
                 <div>
-                    <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200">{subdomain.title}</h3>
+                    <h3 className="text-base font-normal text-gray-800 dark:text-gray-200">{subdomain.title}</h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subdomain.objective}</p>
                 </div>
             </div>

@@ -20,7 +20,7 @@ const CourseCard: React.FC<{ course: TrainingCourse; progress?: UserTrainingProg
 
     return (
         <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6 flex flex-col h-full transition-transform hover:scale-105">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{course.title}</h3>
+            <h3 className="text-base font-normal text-gray-900 dark:text-gray-100">{course.title}</h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 flex-grow">{course.description}</p>
             <div className="mt-4">
                 <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
@@ -32,7 +32,7 @@ const CourseCard: React.FC<{ course: TrainingCourse; progress?: UserTrainingProg
                 </div>
             </div>
             {progress?.badgeEarned && (
-                 <div className="mt-4 text-center py-1 px-2 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs font-bold rounded-full">
+                 <div className="mt-4 text-center py-1 px-2 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs font-normal rounded-full">
                     Badge Earned!
                 </div>
             )}
@@ -45,19 +45,19 @@ const ScenarioCard: React.FC<{ scenario: StoryScenario }> = ({ scenario }) => {
         <div className="group bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col h-full transition-all hover:shadow-xl hover:border-purple-500/50">
             <div className="h-40 w-full overflow-hidden relative">
                 <img src={scenario.coverImage} alt={scenario.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded">
+                <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs font-normal px-2 py-1 rounded">
                     {scenario.difficulty}
                 </div>
             </div>
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex items-center gap-2 mb-2">
                     <SparklesIcon className="w-4 h-4 text-purple-500" />
-                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Interactive Scenario</span>
+                    <span className="text-xs font-normal text-purple-600 dark:text-purple-400 uppercase tracking-wider">Interactive Scenario</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{scenario.title}</h3>
+                <h3 className="text-base font-normal text-gray-900 dark:text-gray-100">{scenario.title}</h3>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 flex-grow">{scenario.description}</p>
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <span className="text-sm font-medium text-teal-600 dark:text-teal-400 group-hover:underline">Start Simulation &rarr;</span>
+                    <span className="text-sm font-normal text-teal-600 dark:text-teal-400 group-hover:underline">Start Simulation &rarr;</span>
                 </div>
             </div>
         </div>
@@ -116,8 +116,8 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({ userProgress, onUpda
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Training & Awareness</h1>
-                <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Enhance your cybersecurity knowledge with courses and interactive simulations.</p>
+                <h1 className="text-lg font-normal text-gray-800 dark:text-gray-100 tracking-tight">Training & Awareness</h1>
+                <p className="mt-2 text-base text-gray-500 dark:text-gray-400">Enhance your cybersecurity knowledge with courses and interactive simulations.</p>
             </div>
 
             {/* Tabs */}
@@ -125,14 +125,14 @@ export const TrainingPage: React.FC<TrainingPageProps> = ({ userProgress, onUpda
                 <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                     <button
                         onClick={() => setActiveTab('courses')}
-                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${activeTab === 'courses' ? 'border-teal-500 text-teal-600 dark:text-teal-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'}`}
+                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-normal text-sm flex items-center gap-2 transition-colors ${activeTab === 'courses' ? 'border-teal-500 text-teal-600 dark:text-teal-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'}`}
                     >
                         <GraduationCapIcon className="w-5 h-5" />
                         Standard Courses
                     </button>
                     <button
                         onClick={() => setActiveTab('scenarios')}
-                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${activeTab === 'scenarios' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'}`}
+                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-normal text-sm flex items-center gap-2 transition-colors ${activeTab === 'scenarios' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'}`}
                     >
                         <SparklesIcon className="w-5 h-5" />
                         Interactive Stories

@@ -98,10 +98,10 @@ export const CompanySetupPage: React.FC<CompanySetupPageProps> = ({ onSetup, onC
       <div className="w-full max-w-2xl">
         <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8">
             <LogoIcon className="mx-auto h-20 w-auto text-teal-600" />
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
+            <h2 className="mt-6 text-center text-xl font-normal text-gray-900 dark:text-gray-100 uppercase tracking-wider">
                 {isExistingUser ? 'Complete Your Setup' : 'Create Your Company Account'}
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-center text-xs text-gray-600 dark:text-gray-400">
                 {isExistingUser 
                     ? 'Your account is active. Please set up your company profile to continue.' 
                     : 'Start by setting up your company profile and the first administrator account.'}
@@ -111,52 +111,52 @@ export const CompanySetupPage: React.FC<CompanySetupPageProps> = ({ onSetup, onC
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="p-6 space-y-8">
                  <fieldset className="space-y-4">
-                    <legend className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Company Details</legend>
+                    <legend className="text-lg font-normal text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Company Details</legend>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Company Name <span className="text-red-500">*</span></label>
+                            <label htmlFor="companyName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Company Name <span className="text-red-500">*</span></label>
                             <input type="text" name="name" id="companyName" value={companyData.name} onChange={handleCompanyChange} required className="mt-1 block w-full input-style" />
                         </div>
                          <div>
-                            <label htmlFor="cisoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">CISO Name</label>
+                            <label htmlFor="cisoName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">CISO Name</label>
                             <input type="text" name="cisoName" id="cisoName" value={companyData.cisoName} onChange={handleCompanyChange} className="mt-1 block w-full input-style" />
                         </div>
                         <div>
-                            <label htmlFor="ceoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">CEO Name</label>
+                            <label htmlFor="ceoName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">CEO Name</label>
                             <input type="text" name="ceoName" id="ceoName" value={companyData.ceoName} onChange={handleCompanyChange} className="mt-1 block w-full input-style" />
                         </div>
                         <div>
-                            <label htmlFor="cioName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">CIO Name</label>
+                            <label htmlFor="cioName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">CIO Name</label>
                             <input type="text" name="cioName" id="cioName" value={companyData.cioName} onChange={handleCompanyChange} className="mt-1 block w-full input-style" />
                         </div>
                          <div>
-                            <label htmlFor="ctoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">CTO Name</label>
+                            <label htmlFor="ctoName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">CTO Name</label>
                             <input type="text" name="ctoName" id="ctoName" value={companyData.ctoName} onChange={handleCompanyChange} className="mt-1 block w-full input-style" />
                         </div>
                         <div>
-                            <label htmlFor="cybersecurityOfficerName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Cybersecurity Officer</label>
+                            <label htmlFor="cybersecurityOfficerName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Cybersecurity Officer</label>
                             <input type="text" name="cybersecurityOfficerName" id="cybersecurityOfficerName" value={companyData.cybersecurityOfficerName} onChange={handleCompanyChange} className="mt-1 block w-full input-style" />
                         </div>
                         <div>
-                            <label htmlFor="dpoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Data Protection Officer (DPO)</label>
+                            <label htmlFor="dpoName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Data Protection Officer (DPO)</label>
                             <input type="text" name="dpoName" id="dpoName" value={companyData.dpoName} onChange={handleCompanyChange} className="mt-1 block w-full input-style" />
                         </div>
                         <div>
-                            <label htmlFor="complianceOfficerName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Compliance Officer</label>
+                            <label htmlFor="complianceOfficerName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Compliance Officer</label>
                             <input type="text" name="complianceOfficerName" id="complianceOfficerName" value={companyData.complianceOfficerName} onChange={handleCompanyChange} className="mt-1 block w-full input-style" />
                         </div>
                     </div>
                  </fieldset>
 
                 <fieldset className="space-y-4">
-                    <legend className="text-lg font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Administrator Account</legend>
+                    <legend className="text-lg font-normal text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Administrator Account</legend>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="adminName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name <span className="text-red-500">*</span></label>
+                            <label htmlFor="adminName" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Full Name <span className="text-red-500">*</span></label>
                             <input type="text" name="name" id="adminName" value={adminData.name} onChange={handleAdminChange} required className="mt-1 block w-full input-style" />
                         </div>
                         <div>
-                            <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address <span className="text-red-500">*</span></label>
+                            <label htmlFor="adminEmail" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Email Address <span className="text-red-500">*</span></label>
                             <input 
                                 type="email" 
                                 name="email" 
@@ -171,7 +171,7 @@ export const CompanySetupPage: React.FC<CompanySetupPageProps> = ({ onSetup, onC
                         {!isExistingUser && (
                             <>
                                 <div>
-                                    <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password <span className="text-red-500">*</span></label>
+                                    <label htmlFor="adminPassword" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Password <span className="text-red-500">*</span></label>
                                     <div className="relative mt-1">
                                         <input type={showPassword ? 'text' : 'password'} name="password" id="adminPassword" value={adminData.password} onChange={handleAdminChange} required className="block w-full input-style pr-10" />
                                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
@@ -180,7 +180,7 @@ export const CompanySetupPage: React.FC<CompanySetupPageProps> = ({ onSetup, onC
                                     </div>
                                 </div>
                                 <div>
-                                    <label htmlFor="adminConfirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password <span className="text-red-500">*</span></label>
+                                    <label htmlFor="adminConfirmPassword" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Confirm Password <span className="text-red-500">*</span></label>
                                     <div className="relative mt-1">
                                         <input type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" id="adminConfirmPassword" value={adminData.confirmPassword} onChange={handleAdminChange} required className="block w-full input-style pr-10" />
                                         <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
@@ -194,8 +194,8 @@ export const CompanySetupPage: React.FC<CompanySetupPageProps> = ({ onSetup, onC
                 </fieldset>
             </div>
             <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex justify-end items-center gap-4">
-                 <button type="button" onClick={onCancel} disabled={isSubmitting} className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-50 disabled:opacity-50">Cancel</button>
-                 <button type="submit" disabled={isSubmitting} className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400">
+                 <button type="button" onClick={onCancel} disabled={isSubmitting} className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-50 disabled:opacity-50">Cancel</button>
+                 <button type="submit" disabled={isSubmitting} className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-normal rounded-md text-white bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400">
                     {isSubmitting ? (
                         <>
                             <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

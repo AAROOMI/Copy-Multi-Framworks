@@ -1,0 +1,147 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - id: string (required) - UID
+    //   - name: string (required) - Full name
+    //   - email: string (required) - Email address
+    //   - role: string (required) - RBAC Role
+    //   - companyId: string (optional) - Linked company
+    //
+    // Collection: companies
+    // Document ID: {companyId}
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - ownerId: string (required) - UID of owner
+    //   - admins: list (optional) - List of admin UIDs
+    //
+    // Subcollection: companies/{companyId}/auditLogs
+    // Subcollection: companies/{companyId}/documents
+    // Subcollection: companies/{companyId}/assessments
+    // Subcollection: companies/{companyId}/risks
+    // Subcollection: companies/{companyId}/assets
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == "aaroomi@gmail.com" ||
+        request.auth.token.email == "aerummi@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Administrator', 'Super Admin'])
+      );
+    }
+
+    function isCompanyMember(companyId) {
+      return isAuthenticated() && (
+        request.auth.token.email == "aaroomi@gmail.com" ||
+        request.auth.token.email == "aerummi@gmail.com" ||
+        companyId == 'demo-company' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId == companyId)
+      );
+    }
+
+    function isCompanyAdmin(companyId) {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/companies/$(companyId)) && (
+          request.auth.uid in get(/databases/$(database)/documents/companies/$(companyId)).data.admins ||
+          get(/databases/$(database)/documents/companies/$(companyId)).data.ownerId == request.auth.uid
+        )) ||
+        isAdmin()
+      );
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'role']) &&
+             data.id is string && data.id.size() > 0 &&
+             data.name is string && data.name.size() > 0 &&
+             data.email is string &&
+             data.role in ['Administrator', 'Super Admin', 'CISO', 'CTO', 'CIO', 'CEO', 'Security Analyst', 'Employee', 'Security Officer'];
+    }
+
+    function isValidCompany(data) {
+      return data.keys().hasAll(['id', 'name', 'ownerId']) &&
+             data.id is string && data.id.size() > 0 &&
+             data.name is string && data.name.size() > 0 &&
+             data.ownerId is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // SUPER ADMIN OVERRIDE - MUST BE FIRST
+    match /{document=**} {
+      allow read, write: if request.auth != null && (
+        request.auth.token.email == "aaroomi@gmail.com" || 
+        request.auth.token.email == "aerummi@gmail.com"
+      );
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /companies/{companyId} {
+      allow read: if companyId == 'demo-company' || isCompanyMember(companyId);
+      allow write: if isCompanyMember(companyId);
+      
+      match /{allSubcollections=**} {
+        allow read: if companyId == 'demo-company' || isCompanyMember(companyId);
+        allow write: if isCompanyMember(companyId);
+      }
+    }
+
+    match /agents/{agentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /policies/{policyId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /conversations/{conversationId} {
+      allow read, write: if isAuthenticated() && (
+        resource == null || 
+        resource.data.userId == request.auth.uid || 
+        isAdmin()
+      );
+      
+      match /{allSubcollections=**} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

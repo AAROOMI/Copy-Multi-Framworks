@@ -68,6 +68,14 @@ const initialConnectors: Connector[] = [
         status: 'disconnected',
         iconUrl: 'https://www.paloaltonetworks.com/content/dam/pan/en_US/images/logos/brand/pan-logo-badge-blue-medium-kick-up.png',
         description: 'Automate Incident Response Data.',
+    },
+    {
+        id: 'metamask-wallet',
+        name: 'MetaMask Wallet',
+        type: 'SaaS',
+        status: 'disconnected',
+        iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Monkey_Face.svg',
+        description: 'Verify Security Officer identities and secure report signing via Web3.',
     }
 ];
 
@@ -239,7 +247,7 @@ export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({ onAddRisk, a
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Enterprise Integration Hub</h1>
+                <h1 className="text-xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">Enterprise Integration Hub</h1>
                 <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Connect external systems to automatically fetch security data and populate the Risk Register.</p>
             </div>
 
@@ -258,8 +266,8 @@ export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({ onAddRisk, a
                                 {/* Fallback visual if image breaks */}
                                 <div className="hidden">Icon</div> 
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{connector.name}</h3>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 mt-2 mb-4">
+                            <h3 className="text-lg font-normal text-gray-900 dark:text-gray-100">{connector.name}</h3>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-normal bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 mt-2 mb-4">
                                 {connector.type}
                             </span>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
@@ -270,13 +278,13 @@ export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({ onAddRisk, a
                                 {connector.status === 'disconnected' ? (
                                     <button 
                                         onClick={() => handleConnect(connector.id)}
-                                        className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+                                        className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
                                     >
                                         Connect
                                     </button>
                                 ) : (
                                     <div className="space-y-3 w-full">
-                                        <div className="flex items-center justify-center text-green-600 dark:text-green-400 text-sm font-medium">
+                                        <div className="flex items-center justify-center text-green-600 dark:text-green-400 text-sm font-normal">
                                             <CheckCircleIcon className="w-4 h-4 mr-1.5" />
                                             Connected
                                         </div>
@@ -287,7 +295,7 @@ export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({ onAddRisk, a
                                             <button 
                                                 onClick={() => handleSync(connector.id)}
                                                 disabled={connector.status === 'syncing'}
-                                                className="w-full inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400"
+                                                className="w-full inline-flex justify-center items-center px-3 py-2 border border-transparent text-sm font-normal rounded-md text-white bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400"
                                             >
                                                 {connector.status === 'syncing' ? (
                                                     <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -298,7 +306,7 @@ export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({ onAddRisk, a
                                             </button>
                                             <button 
                                                 onClick={() => handleDisconnect(connector.id)}
-                                                className="w-full inline-flex justify-center items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                                className="w-full inline-flex justify-center items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                                             >
                                                 Disconnect
                                             </button>
@@ -313,7 +321,7 @@ export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({ onAddRisk, a
                 {/* Coming Soon Placeholder */}
                 <div className="bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 flex flex-col items-center justify-center text-center opacity-75">
                     <LockClosedIcon className="w-12 h-12 text-gray-400 mb-2" />
-                    <h3 className="text-lg font-medium text-gray-600 dark:text-gray-300">More Coming Soon</h3>
+                    <h3 className="text-lg font-normal text-gray-600 dark:text-gray-300">More Coming Soon</h3>
                     <p className="text-sm text-gray-500 mt-1">Jira, ServiceNow, AWS, and Azure integrations are in development.</p>
                 </div>
             </div>

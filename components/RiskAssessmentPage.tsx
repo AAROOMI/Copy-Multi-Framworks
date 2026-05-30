@@ -1,15 +1,169 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { TrashIcon, ArrowUpRightIcon, CloseIcon, DocumentTextIcon, ExclamationTriangleIcon, MicrophoneIcon } from './Icons';
-import type { Risk, Permission, RiskTreatmentOption, ControlEffectiveness } from '../types';
+import { TrashIcon, ArrowUpRightIcon, CloseIcon, DocumentTextIcon, ExclamationTriangleIcon, MicrophoneIcon, ActivityIcon, CheckCircleIcon, ShieldAlertIcon } from './Icons';
+import type { Risk, Permission, RiskTreatmentOption, ControlEffectiveness, GRCAnalysisModels } from '../types';
+import { AgentService } from '../services/agentService';
 import { likelihoodOptions, impactOptions } from '../data/riskAssessmentData';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+
+const COLORS = ['#14b8a6', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'];
+
+const SWOTView: React.FC<{ data: GRCAnalysisModels['swot'] }> = ({ data }) => {
+    if (!data) return null;
+    return (
+        <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-900/30">
+                <h4 className="text-[10px] font-normal text-green-600 uppercase mb-2">Strengths</h4>
+                <ul className="text-xs space-y-1 text-gray-700 dark:text-gray-300">
+                    {data.strengths.map((s, i) => <li key={i}>• {s}</li>)}
+                </ul>
+            </div>
+            <div className="p-4 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/30">
+                <h4 className="text-[10px] font-normal text-red-600 uppercase mb-2">Weaknesses</h4>
+                <ul className="text-xs space-y-1 text-gray-700 dark:text-gray-300">
+                    {data.weaknesses.map((s, i) => <li key={i}>• {s}</li>)}
+                </ul>
+            </div>
+            <div className="p-4 bg-teal-50 dark:bg-teal-900/10 rounded-lg border border-teal-100 dark:border-teal-900/30">
+                <h4 className="text-[10px] font-normal text-teal-600 uppercase mb-2">Opportunities</h4>
+                <ul className="text-xs space-y-1 text-gray-700 dark:text-gray-300">
+                    {data.opportunities.map((s, i) => <li key={i}>• {s}</li>)}
+                </ul>
+            </div>
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/10 rounded-lg border border-orange-100 dark:border-orange-900/30">
+                <h4 className="text-[10px] font-normal text-orange-600 uppercase mb-2">Threats</h4>
+                <ul className="text-xs space-y-1 text-gray-700 dark:text-gray-300">
+                    {data.threats.map((s, i) => <li key={i}>• {s}</li>)}
+                </ul>
+            </div>
+        </div>
+    );
+};
+
+const ParetoView: React.FC<{ data: GRCAnalysisModels['pareto8020'] }> = ({ data }) => {
+    if (!data) return null;
+    return (
+        <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.1} />
+                    <XAxis dataKey="item" fontSize={10} tick={{ fill: '#6b7280' }} />
+                    <YAxis fontSize={10} tick={{ fill: '#6b7280' }} />
+                    <Tooltip 
+                        contentStyle={{ backgroundColor: '#111827', border: 'none', borderRadius: '8px', fontSize: '12px', color: '#f3f4f6' }}
+                    />
+                    <Bar dataKey="impact" fill="#14b8a6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+};
+
+const PESTLEView: React.FC<{ data: Required<Exclude<GRCAnalysisModels['pestle'], undefined>> }> = ({ data }) => {
+    if (!data) return null;
+    return (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {Object.entries(data).map(([key, list]) => (
+                <div key={key} className="p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <h5 className="text-[10px] font-normal text-teal-600 dark:text-teal-400 uppercase tracking-widest mb-2 border-b border-teal-100 dark:border-teal-900/30 pb-1">{key}</h5>
+                    <ul className="text-[11px] space-y-1 text-gray-600 dark:text-gray-400">
+                        {Object.values(list as string[]).map((item, i) => <li key={i}>• {item}</li>)}
+                    </ul>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const FishboneView: React.FC<{ data: GRCAnalysisModels['fishbone'] }> = ({ data }) => {
+    if (!data) return null;
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-col items-center">
+                <div className="w-full h-1 bg-teal-600 dark:bg-teal-500 rounded-full relative my-8">
+                   <div className="absolute right-0 -top-3 w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center text-[10px] text-white">HEAD</div>
+                   {data.map((item, i) => (
+                       <div key={i} className={`absolute ${i % 2 === 0 ? '-top-12' : 'top-1'} flex flex-col items-center`} style={{ left: `${(i + 1) * 20}%` }}>
+                           <div className="h-12 w-0.5 bg-gray-300 dark:bg-gray-600"></div>
+                           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 rounded shadow-sm text-[10px]">
+                               <span className="font-normal text-teal-600 dark:text-teal-400 block mb-1">{item.category}</span>
+                               <ul className="text-[9px] text-gray-500">
+                                   {item.causes.slice(0, 2).map((c, j) => <li key={j}>• {c}</li>)}
+                               </ul>
+                           </div>
+                       </div>
+                   ))}
+                </div>
+            </div>
+            <p className="text-[10px] text-center text-gray-400 italic">Visual Fishbone (Ishikawa) root-cause summary</p>
+        </div>
+    );
+};
+
+const BowtieView: React.FC<{ data: GRCAnalysisModels['bowtie'] }> = ({ data }) => {
+    if (!data) return null;
+    return (
+        <div className="flex flex-col items-center space-y-4">
+            <div className="grid grid-cols-3 w-full gap-4 items-center">
+                <div className="space-y-2">
+                    <h6 className="text-[10px] uppercase text-gray-400 text-center">Threats & Controls</h6>
+                    {data.threats.slice(0, 2).map((t, i) => (
+                        <div key={i} className="p-2 bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800/30 rounded text-center text-[10px]">{t}</div>
+                    ))}
+                </div>
+                <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full border-4 border-red-500 flex items-center justify-center text-center p-1">
+                        <span className="text-[9px] font-normal leading-tight text-red-600 dark:text-red-400">{data.topEvent}</span>
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <h6 className="text-[10px] uppercase text-gray-400 text-center">Consequences & Recovery</h6>
+                    {data.consequences.slice(0, 2).map((c, i) => (
+                        <div key={i} className="p-2 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800/30 rounded text-center text-[10px]">{c}</div>
+                    ))}
+                </div>
+            </div>
+            <p className="text-[10px] text-gray-400 font-normal">Bowtie Hazard Analysis Core: {data.hazard}</p>
+        </div>
+    );
+};
+
+const MetricsSummary: React.FC<{ risks: Risk[] }> = ({ risks }) => {
+    const kpi = useMemo(() => {
+        const total = risks.length;
+        const critical = risks.filter(r => (r.residualScore || 0) >= 20).length;
+        const open = risks.filter(r => (r.progress || 0) < 100).length;
+        return [
+            { label: 'Total Risks', value: total, icon: ActivityIcon, color: 'text-gray-600' },
+            { label: 'Critical Risks', value: critical, icon: ShieldAlertIcon, color: 'text-red-500' },
+            { label: 'Pending Actions', value: open, icon: ArrowUpRightIcon, color: 'text-orange-500' },
+            { label: 'Resolution Rate', value: `${total ? Math.round(((total - open) / total) * 100) : 0}%`, icon: CheckCircleIcon, color: 'text-teal-600' },
+        ];
+    }, [risks]);
+
+    return (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {kpi.map((m, i) => (
+                <div key={i} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4">
+                    <div className={`p-2 rounded-lg bg-gray-50 dark:bg-gray-900 ${m.color}`}>
+                        <m.icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] uppercase font-normal text-gray-400">{m.label}</p>
+                        <p className="text-lg font-normal text-gray-900 dark:text-gray-100">{m.value}</p>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
 
 const getRiskScoreInfo = (score: number): { text: string, color: string } => {
   if (score <= 5) return { text: 'Low', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' };
   if (score <= 10) return { text: 'Medium', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' };
   if (score <= 15) return { text: 'High', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' };
   if (score <= 20) return { text: 'Very High', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' };
-  return { text: 'Critical', color: 'bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-100 font-bold' };
+  return { text: 'Critical', color: 'bg-red-200 text-red-900 dark:bg-red-900/50 dark:text-red-100 font-normal' };
 };
 
 const RiskFormModal: React.FC<{
@@ -61,7 +215,7 @@ const RiskFormModal: React.FC<{
         <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
                 <header className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-t-xl">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100 uppercase tracking-wide">
                         {formData.id ? 'Edit Risk Profile' : 'New Risk Assessment'}
                     </h2>
                     <button onClick={onClose}><CloseIcon className="w-6 h-6 text-gray-500" /></button>
@@ -72,7 +226,7 @@ const RiskFormModal: React.FC<{
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab as any)}
-                            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+                            className={`flex-1 py-3 text-sm font-normal border-b-2 transition-colors ${
                                 activeTab === tab 
                                 ? 'border-teal-500 text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20' 
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
@@ -108,7 +262,7 @@ const RiskFormModal: React.FC<{
                                 <input type="text" className="input" value={formData.owner} onChange={e => handleChange('owner', e.target.value)} required />
                             </div>
                             <div className="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
-                                <h4 className="font-semibold mb-3 dark:text-gray-200">Inherent Risk Assessment (Before Controls)</h4>
+                                <h4 className="font-normal mb-3 dark:text-gray-200">Inherent Risk Assessment (Before Controls)</h4>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <label className="label">Likelihood (1-5)</label>
@@ -124,7 +278,7 @@ const RiskFormModal: React.FC<{
                                     </div>
                                     <div>
                                         <label className="label">Inherent Score</label>
-                                        <div className={`mt-1 p-2 rounded text-center font-bold ${getRiskScoreInfo(formData.inherentScore || 0).color}`}>
+                                        <div className={`mt-1 p-2 rounded text-center font-normal ${getRiskScoreInfo(formData.inherentScore || 0).color}`}>
                                             {formData.inherentScore}
                                         </div>
                                     </div>
@@ -148,7 +302,7 @@ const RiskFormModal: React.FC<{
                                 </select>
                             </div>
                             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                <h4 className="font-semibold mb-3 dark:text-gray-200">Residual Risk Assessment (After Controls)</h4>
+                                <h4 className="font-normal mb-3 dark:text-gray-200">Residual Risk Assessment (After Controls)</h4>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <label className="label">Likelihood (1-5)</label>
@@ -164,7 +318,7 @@ const RiskFormModal: React.FC<{
                                     </div>
                                     <div>
                                         <label className="label">Residual Score</label>
-                                        <div className={`mt-1 p-2 rounded text-center font-bold ${getRiskScoreInfo(formData.residualScore || 0).color}`}>
+                                        <div className={`mt-1 p-2 rounded text-center font-normal ${getRiskScoreInfo(formData.residualScore || 0).color}`}>
                                             {formData.residualScore}
                                         </div>
                                     </div>
@@ -254,7 +408,7 @@ const RiskFormModal: React.FC<{
                 </footer>
             </div>
             <style>{`
-                .label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+                .label { display: block; font-size: 0.875rem; font-weight: 400; color: #374151; margin-bottom: 0.25rem; }
                 .dark .label { color: #d1d5db; }
                 .input { display: block; width: 100%; border-radius: 0.375rem; border: 1px solid #d1d5db; background-color: #fff; padding: 0.5rem; color: #111827; }
                 .dark .input { background-color: #374151; border-color: #4b5563; color: #f9fafb; }
@@ -281,10 +435,10 @@ const ReportConfigModal: React.FC<{
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Generate Risk Report</h3>
+                <h3 className="text-base font-normal text-gray-900 dark:text-gray-100 mb-4">Generate Risk Report</h3>
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Category</label>
+                        <label className="block text-sm font-normal text-gray-700 dark:text-gray-300 mb-1">Filter by Category</label>
                         <select 
                             className="block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
                             value={selectedCategory}
@@ -295,7 +449,7 @@ const ReportConfigModal: React.FC<{
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Treatment Status</label>
+                        <label className="block text-sm font-normal text-gray-700 dark:text-gray-300 mb-1">Filter by Treatment Status</label>
                         <select 
                             className="block w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
                             value={selectedStatus}
@@ -343,14 +497,14 @@ const RiskMatrix: React.FC<{ allRisks: Risk[] }> = ({ allRisks }) => {
   
   return (
     <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">Residual Risk Heatmap</h2>
+      <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100 mb-6 text-center">Residual Risk Heatmap</h2>
       <div className="flex justify-center items-start gap-4">
         <div className="flex flex-col items-center justify-center pt-8 self-stretch">
-            <div className="transform -rotate-90 whitespace-nowrap font-bold text-gray-600 dark:text-gray-300 tracking-wider">LIKELIHOOD</div>
+            <div className="transform -rotate-90 whitespace-nowrap font-normal text-gray-600 dark:text-gray-300 tracking-wider">LIKELIHOOD</div>
         </div>
         <div className="flex-1 max-w-2xl">
           <div className="grid grid-cols-[auto_1fr] gap-x-2">
-              <div className="flex flex-col-reverse justify-around text-right text-sm font-semibold text-gray-500 dark:text-gray-400">
+              <div className="flex flex-col-reverse justify-around text-right text-sm font-normal text-gray-500 dark:text-gray-400">
                   {likelihoodOptions.map(opt => (
                       <div key={opt.value} className="h-16 flex items-center pr-2">{opt.value}</div>
                   ))}
@@ -365,12 +519,12 @@ const RiskMatrix: React.FC<{ allRisks: Risk[] }> = ({ allRisks }) => {
                           
                           return (
                               <div key={`${likelihood}-${impact}`} className="relative group h-16 flex items-center justify-center">
-                                  <div className={`w-full h-full rounded-md flex items-center justify-center text-white font-bold text-2xl transition-all duration-200 ${getCellColor(likelihood, impact)} ${hasRisks ? 'cursor-pointer' : ''}`}>
+                                  <div className={`w-full h-full rounded-md flex items-center justify-center text-white font-normal text-lg transition-all duration-200 ${getCellColor(likelihood, impact)} ${hasRisks ? 'cursor-pointer' : ''}`}>
                                       {hasRisks ? cellRisks.length : ''}
                                   </div>
                                   {hasRisks && (
                                       <div className="absolute bottom-full mb-3 w-72 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10 dark:bg-gray-700">
-                                          <h4 className="font-bold border-b border-gray-600 pb-1 mb-2">Risks ({cellRisks.length})</h4>
+                                          <h4 className="font-normal border-b border-gray-600 pb-1 mb-2">Risks ({cellRisks.length})</h4>
                                           <ul className="list-disc list-inside space-y-1 max-h-48 overflow-y-auto">
                                               {cellRisks.map(risk => <li key={risk.id}>{risk.title || risk.description.substring(0, 30)}</li>)}
                                           </ul>
@@ -382,10 +536,10 @@ const RiskMatrix: React.FC<{ allRisks: Risk[] }> = ({ allRisks }) => {
                   )}
               </div>
           </div>
-          <div className="grid grid-cols-5 gap-2 text-center text-sm font-semibold text-gray-500 dark:text-gray-400 mt-2 ml-[30px]">
+          <div className="grid grid-cols-5 gap-2 text-center text-sm font-normal text-gray-500 dark:text-gray-400 mt-2 ml-[30px]">
               {impactOptions.map(opt => <div key={opt.value}>{opt.value}</div>)}
           </div>
-           <div className="text-center mt-2 font-bold text-gray-600 dark:text-gray-300 ml-[30px]">IMPACT</div>
+           <div className="text-center mt-2 font-normal text-gray-600 dark:text-gray-300 ml-[30px]">IMPACT</div>
         </div>
       </div>
     </div>
@@ -406,6 +560,52 @@ export const RiskAssessmentPage: React.FC<RiskAssessmentPageProps> = ({ risks, s
     const [editingRisk, setEditingRisk] = useState<Risk | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [aiAnalysis, setAiAnalysis] = useState<GRCAnalysisModels | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const handleInitiateAI = async () => {
+        setIsProcessing(true);
+        onInitiate();
+        try {
+            const result = await AgentService.conductMeeting("Provide a strategic GRC assessment and identify key risks.", {
+                company: { name: 'Saudi Enterprise' },
+                users: [{ name: 'Executive', role: 'admin' }],
+                assessments: { selectedFramework: 'NCA ECC' },
+                documents: []
+            });
+            
+            if (result.analysis) {
+                setAiAnalysis(result.analysis);
+                setShowAdvanced(true);
+            }
+            
+            if (result.mom?.identifiedRisks) {
+                const newRisks: Risk[] = result.mom.identifiedRisks.map((r, i) => ({
+                    id: `ai-${Date.now()}-${i}`,
+                    title: r.title,
+                    category: 'AI Identified',
+                    description: `Identified during AI GRC Boardroom meeting. Level: ${r.level}`,
+                    owner: 'GRC Team',
+                    inherentLikelihood: r.level === 'high' ? 4 : 3,
+                    inherentImpact: r.level === 'high' ? 5 : 3,
+                    inherentScore: r.level === 'high' ? 20 : 9,
+                    residualLikelihood: 3,
+                    residualImpact: 3,
+                    residualScore: 9,
+                    progress: 0,
+                    treatmentOption: 'Mitigate',
+                    createdAt: Date.now()
+                } as any));
+                setRisks(prev => [...prev, ...newRisks]);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsProcessing(false);
+            onComplete();
+        }
+    };
     // Deletion confirmation state
     const [riskToDelete, setRiskToDelete] = useState<Risk | null>(null);
     const [deleteConfirmationInput, setDeleteConfirmationInput] = useState('');
@@ -457,39 +657,112 @@ export const RiskAssessmentPage: React.FC<RiskAssessmentPageProps> = ({ risks, s
         <div className="space-y-8">
             <div className="flex flex-wrap justify-between items-start gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Risk Assessment Register</h1>
+                    <h1 className="text-xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">Risk Assessment Register</h1>
                     <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Comprehensive ISO 31000 aligned Risk Register.</p>
                 </div>
                 <div className="flex-shrink-0 flex items-center gap-2 flex-wrap">
                     {onGenerateReport && (
-                        <button onClick={() => setIsReportModalOpen(true)} className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <button onClick={() => setIsReportModalOpen(true)} className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-normal rounded-md shadow-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                             <DocumentTextIcon className="w-4 h-4 mr-2" />
                             Generate Report
                         </button>
                     )}
+                    <button onClick={() => setShowAdvanced(!showAdvanced)} className={`inline-flex items-center px-4 py-2 border text-sm font-normal rounded-md shadow-sm ${showAdvanced ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-white border-gray-300 text-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600'}`}>
+                        <ActivityIcon className="w-4 h-4 mr-2" />
+                        {showAdvanced ? 'Hide Governance View' : 'Governance & KRI'}
+                    </button>
                     {isEditable && (
-                        <button onClick={() => { setEditingRisk(null); setIsModalOpen(true); }} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
+                        <button onClick={() => { setEditingRisk(null); setIsModalOpen(true); }} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
                             + Add New Risk
                         </button>
                     )}
                     {status === 'idle' ? (
-                        <button onClick={onInitiate} className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600">
-                            <MicrophoneIcon className="w-4 h-4 mr-2" />
-                            Initiate AI Assessment
+                        <button onClick={handleInitiateAI} disabled={isProcessing} className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-normal rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 disabled:opacity-50">
+                            <MicrophoneIcon className={`w-4 h-4 mr-2 ${isProcessing ? 'animate-pulse' : ''}`} />
+                            {isProcessing ? 'AI Agent Meeting...' : 'Initiate AI Assessment'}
                         </button>
                     ) : (
                         <div className="flex gap-2">
-                            <button onClick={onInitiate} className="inline-flex items-center px-4 py-2 border border-purple-300 text-sm font-medium rounded-md shadow-sm text-purple-700 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/50 dark:text-purple-200 dark:border-purple-800">
-                                <MicrophoneIcon className="w-4 h-4 mr-2" />
+                            <button onClick={handleInitiateAI} disabled={isProcessing} className="inline-flex items-center px-4 py-2 border border-purple-300 text-sm font-normal rounded-md shadow-sm text-purple-700 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/50 dark:text-purple-200 dark:border-purple-800 disabled:opacity-50">
+                                <MicrophoneIcon className={`w-4 h-4 mr-2 ${isProcessing ? 'animate-pulse' : ''}`} />
                                 Consult Rashid AI
                             </button>
-                            <button onClick={onComplete} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
+                            <button onClick={onComplete} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
                                 Complete Assessment
                             </button>
                         </div>
                     )}
                 </div>
             </div>
+
+            <MetricsSummary risks={risks} />
+
+            {showAdvanced && (
+                <div className="space-y-8 mb-8 animate-fade-in">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <h3 className="text-xs font-normal uppercase text-gray-400 mb-6 flex items-center gap-2 tracking-widest">
+                                 <ActivityIcon className="w-4 h-4 text-teal-600" />
+                                 SWOT Governance Analysis
+                            </h3>
+                            {aiAnalysis?.swot ? <SWOTView data={aiAnalysis.swot} /> : (
+                                <div className="h-48 flex items-center justify-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-lg">
+                                    <p className="text-xs text-gray-400 italic font-normal">Initiate AI Meeting to generate SWOT analysis.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm text-center">
+                            <h3 className="text-xs font-normal uppercase text-gray-400 mb-6 flex items-center gap-2 tracking-widest">
+                                 <ActivityIcon className="w-4 h-4 text-teal-600" />
+                                 80/20 Impact Pareto Chart
+                            </h3>
+                            {aiAnalysis?.pareto8020 ? <ParetoView data={aiAnalysis.pareto8020} /> : (
+                                 <div className="h-48 flex items-center justify-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-lg">
+                                    <p className="text-xs text-gray-400 italic font-normal">Impact metrics will appear here after AI assessment.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <h3 className="text-xs font-normal uppercase text-gray-400 mb-6 flex items-center gap-2 tracking-widest">
+                                 <ActivityIcon className="w-4 h-4 text-teal-600" />
+                                 PESTLE Strategic Factors
+                            </h3>
+                            {aiAnalysis?.pestle ? <PESTLEView data={aiAnalysis.pestle} /> : (
+                                <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-lg">
+                                    <p className="text-xs text-gray-400 italic font-normal">Environmental factor mapping...</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <h3 className="text-xs font-normal uppercase text-gray-400 mb-6 flex items-center gap-2 tracking-widest">
+                                 <ActivityIcon className="w-4 h-4 text-teal-600" />
+                                 Bowtie Risk Diagram
+                            </h3>
+                            {aiAnalysis?.bowtie ? <BowtieView data={aiAnalysis.bowtie} /> : (
+                                <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-lg">
+                                    <p className="text-xs text-gray-400 italic font-normal">Hazard analysis metrics...</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <h3 className="text-xs font-normal uppercase text-gray-400 mb-6 flex items-center gap-2 tracking-widest">
+                                <ActivityIcon className="w-4 h-4 text-teal-600" />
+                                Fishbone Root-Cause Analysis
+                        </h3>
+                        {aiAnalysis?.fishbone ? <FishboneView data={aiAnalysis.fishbone} /> : (
+                            <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-lg">
+                                <p className="text-xs text-gray-400 italic font-normal">Causal mapping will appear here...</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             <RiskMatrix allRisks={risks} />
 
@@ -498,12 +771,12 @@ export const RiskAssessmentPage: React.FC<RiskAssessmentPageProps> = ({ risks, s
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-900/50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Risk ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Title & Category</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Residual Score</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Treatment</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Progress</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Owner / Due Date</th>
+                                <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 uppercase tracking-wider">Risk ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 uppercase tracking-wider">Title & Category</th>
+                                <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 uppercase tracking-wider">Residual Score</th>
+                                <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 uppercase tracking-wider">Treatment</th>
+                                <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 uppercase tracking-wider">Progress</th>
+                                <th className="px-6 py-3 text-left text-xs font-normal text-gray-500 uppercase tracking-wider">Owner / Due Date</th>
                                 <th className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                             </tr>
                         </thead>
@@ -519,11 +792,11 @@ export const RiskAssessmentPage: React.FC<RiskAssessmentPageProps> = ({ risks, s
                                     <tr key={risk.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{risk.id}</td>
                                         <td className="px-6 py-4">
-                                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{risk.title || 'Untitled Risk'}</div>
+                                            <div className="text-sm font-normal text-gray-900 dark:text-gray-100">{risk.title || 'Untitled Risk'}</div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400">{risk.category}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${scoreInfo.color}`}>
+                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-normal rounded-full ${scoreInfo.color}`}>
                                                 {score} - {scoreInfo.text}
                                             </span>
                                         </td>
@@ -538,12 +811,12 @@ export const RiskAssessmentPage: React.FC<RiskAssessmentPageProps> = ({ risks, s
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             <div>{risk.owner}</div>
-                                            <div className={`text-xs ${isOverdue ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+                                            <div className={`text-xs ${isOverdue ? 'text-red-500 font-normal' : 'text-gray-400'}`}>
                                                 {risk.dueDate ? new Date(risk.dueDate).toLocaleDateString() : 'No Date'}
                                                 {isOverdue && ' (Overdue)'}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-normal">
                                             <button onClick={() => { setEditingRisk(risk); setIsModalOpen(true); }} className="text-teal-600 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200 mr-4">Edit</button>
                                             {isEditable && <button onClick={() => initiateDelete(risk)} className="text-red-600 hover:text-red-900 dark:text-red-400"><TrashIcon className="w-5 h-5 inline"/></button>}
                                         </td>
@@ -578,10 +851,10 @@ export const RiskAssessmentPage: React.FC<RiskAssessmentPageProps> = ({ risks, s
                         <div className="flex items-center justify-center mb-4 text-red-600 dark:text-red-500">
                             <ExclamationTriangleIcon className="w-12 h-12" />
                         </div>
-                        <h3 className="text-lg font-bold text-center text-gray-900 dark:text-gray-100 mb-2">Confirm Risk Deletion</h3>
+                        <h3 className="text-base font-normal text-center text-gray-900 dark:text-gray-100 mb-2">Confirm Risk Deletion</h3>
                         <p className="text-sm text-center text-gray-600 dark:text-gray-400 mb-6">
                             This action cannot be undone. To verify, please type the Risk ID 
-                            <span className="font-mono font-bold mx-1 text-gray-800 dark:text-gray-200 select-all">{riskToDelete.id}</span>
+                            <span className="font-mono font-normal mx-1 text-gray-800 dark:text-gray-200 select-all">{riskToDelete.id}</span>
                             below.
                         </p>
                         
@@ -604,7 +877,7 @@ export const RiskAssessmentPage: React.FC<RiskAssessmentPageProps> = ({ risks, s
                             <button 
                                 onClick={confirmDelete} 
                                 disabled={deleteConfirmationInput !== riskToDelete.id}
-                                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 dark:disabled:bg-red-900 text-white rounded-md font-medium transition-colors"
+                                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 dark:disabled:bg-red-900 text-white rounded-md font-normal transition-colors"
                             >
                                 Permanently Delete
                             </button>

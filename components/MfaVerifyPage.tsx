@@ -39,7 +39,7 @@ export const MfaVerifyPage: React.FC<MfaVerifyPageProps> = ({ user, onVerify, on
             >
                 {theme === 'light' ? <MoonIcon className="w-6 h-6" /> : <SunIcon className="w-6 h-6" />}
             </button>
-            <button onClick={onCancel} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-teal-600">
+            <button onClick={onCancel} className="text-sm font-normal text-gray-600 dark:text-gray-300 hover:text-teal-600">
                 Sign Out
             </button>
         </div>
@@ -57,7 +57,7 @@ export const MfaVerifyPage: React.FC<MfaVerifyPageProps> = ({ user, onVerify, on
             <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-gray-200 dark:border-gray-700">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                         <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-center">
+                         <label htmlFor="code" className="block text-sm font-normal text-gray-700 dark:text-gray-300 text-center">
                             Verification Code
                         </label>
                         <div className="mt-2">
@@ -68,7 +68,7 @@ export const MfaVerifyPage: React.FC<MfaVerifyPageProps> = ({ user, onVerify, on
                     </div>
                     {error && <p className="text-sm text-center text-red-500 dark:text-red-400">{error}</p>}
                      <div>
-                        <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 dark:disabled:bg-gray-600">
+                        <button type="submit" disabled={isLoading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-normal text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-gray-400 dark:disabled:bg-gray-600">
                              {isLoading ? <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> : "Verify"}
                         </button>
                     </div>

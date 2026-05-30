@@ -60,7 +60,7 @@ export const InteractiveStoryPlayer: React.FC<InteractiveStoryPlayerProps> = ({ 
                         <div className="p-2 bg-purple-600 rounded-lg">
                             <SparklesIcon className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-white font-bold text-lg drop-shadow-md">{scenario.title}</span>
+                        <span className="text-white font-normal text-lg drop-shadow-md">{scenario.title}</span>
                     </div>
                     <button 
                         onClick={onClose}
@@ -92,13 +92,13 @@ export const InteractiveStoryPlayer: React.FC<InteractiveStoryPlayerProps> = ({ 
                     {feedback && (
                         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 p-8 backdrop-blur-sm animate-fade-in">
                             <div className="bg-white dark:bg-gray-800 p-8 rounded-xl max-w-lg text-center shadow-2xl border-2 border-purple-500">
-                                <h3 className="text-2xl font-bold mb-4 text-purple-600 dark:text-purple-400">
+                                <h3 className="text-2xl font-normal mb-4 text-purple-600 dark:text-purple-400">
                                     {pendingChoice?.isCorrect === true ? "Good Choice!" : pendingChoice?.isCorrect === false ? "Ouch!" : "Result"}
                                 </h3>
                                 <p className="text-lg text-gray-700 dark:text-gray-300 mb-8">{feedback}</p>
                                 <button 
                                     onClick={() => pendingChoice && continueAfterFeedback(pendingChoice.nextSceneId)}
-                                    className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-lg transition-transform hover:scale-105"
+                                    className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-normal text-base transition-transform hover:scale-105"
                                 >
                                     Continue
                                 </button>
@@ -111,7 +111,7 @@ export const InteractiveStoryPlayer: React.FC<InteractiveStoryPlayerProps> = ({ 
                 <div className="h-1/3 bg-gray-900 border-t border-gray-700 p-6 flex flex-col md:flex-row gap-6">
                     {/* Story Text */}
                     <div className="flex-1 overflow-y-auto pr-2">
-                        <h2 className="text-2xl font-bold text-white mb-2 text-teal-400">{currentScene.title}</h2>
+                        <h2 className="text-lg font-normal text-white mb-2 text-teal-400">{currentScene.title}</h2>
                         <p className="text-gray-300 text-lg leading-relaxed whitespace-pre-wrap">
                             {currentScene.narrative}
                         </p>
@@ -127,7 +127,7 @@ export const InteractiveStoryPlayer: React.FC<InteractiveStoryPlayerProps> = ({ 
                                     disabled={!!feedback}
                                     className="p-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 hover:border-teal-500 text-left text-gray-200 rounded-lg transition-all duration-200 hover:shadow-lg hover:translate-x-1 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <span className="font-bold text-teal-500 mr-2">{String.fromCharCode(65 + idx)}.</span>
+                                    <span className="font-normal text-teal-500 mr-2">{String.fromCharCode(65 + idx)}.</span>
                                     {choice.text}
                                 </button>
                             ))
@@ -136,13 +136,13 @@ export const InteractiveStoryPlayer: React.FC<InteractiveStoryPlayerProps> = ({ 
                                 <div className="text-center text-gray-400 italic mb-2">End of Scenario</div>
                                 <button
                                     onClick={onClose}
-                                    className="p-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-bold transition-colors text-center"
+                                    className="p-4 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-normal transition-colors text-center"
                                 >
                                     Finish Training
                                 </button>
                                 <button
                                     onClick={handleRestart}
-                                    className="p-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-bold transition-colors text-center"
+                                    className="p-4 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-normal transition-colors text-center"
                                 >
                                     Replay Scenario
                                 </button>

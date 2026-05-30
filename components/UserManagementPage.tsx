@@ -108,22 +108,22 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
                 <form onSubmit={handleSubmit}>
                     <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{user ? 'Edit User' : 'Create New User'}</h2>
+                        <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100">{user ? 'Edit User' : 'Create New User'}</h2>
                         <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
                             <CloseIcon className="w-6 h-6 text-gray-500" />
                         </button>
                     </header>
                     <main className="p-6 space-y-4">
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+                            <label htmlFor="name" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Full Name</label>
                             <input type="text" name="name" id="name" value={formData.name} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm text-gray-900 dark:text-gray-200" />
                         </div>
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
+                            <label htmlFor="email" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Email Address</label>
                             <input type="email" name="email" id="email" value={formData.email} onChange={handleChange} required className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm text-gray-900 dark:text-gray-200" />
                         </div>
                          <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                            <label htmlFor="password" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Password</label>
                             <div className="relative mt-1">
                                 <input type={showPassword ? 'text' : 'password'} name="password" id="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={user ? "Leave blank to keep current password" : ""} className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm text-gray-900 dark:text-gray-200 pr-10" />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
@@ -132,7 +132,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
                             </div>
                         </div>
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
+                            <label htmlFor="confirmPassword" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Confirm Password</label>
                              <div className="relative mt-1">
                                 <input type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" id="confirmPassword" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm text-gray-900 dark:text-gray-200 pr-10" />
                                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
@@ -141,13 +141,13 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
                             </div>
                         </div>
                         <div>
-                            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+                            <label htmlFor="role" className="block text-sm font-normal text-gray-700 dark:text-gray-300">Role</label>
                             <select id="role" name="role" value={formData.role} onChange={handleChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200">
                                 {allRoles.map(role => <option key={role} value={role}>{role}</option>)}
                             </select>
                         </div>
                         <fieldset>
-                            <legend className="block text-sm font-medium text-gray-700 dark:text-gray-300">Access Duration</legend>
+                            <legend className="block text-sm font-normal text-gray-700 dark:text-gray-300">Access Duration</legend>
                             <div className="mt-2 space-y-2">
                                 {['permanent', 'week', 'month', 'custom'].map(option => (
                                     <div key={option} className="flex items-center">
@@ -160,7 +160,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
                                             onChange={(e) => setExpirationOption(e.target.value)}
                                             className="focus:ring-teal-500 h-4 w-4 text-teal-600 border-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:checked:bg-teal-500"
                                         />
-                                        <label htmlFor={`expiration-${option}`} className="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        <label htmlFor={`expiration-${option}`} className="ml-3 block text-sm font-normal text-gray-700 dark:text-gray-300">
                                             {option === 'permanent' && 'Permanent'}
                                             {option === 'week' && 'Expires in 1 Week'}
                                             {option === 'month' && 'Expires in 1 Month'}
@@ -181,8 +181,8 @@ const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose, onSave }) 
                         </fieldset>
                     </main>
                     <footer className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 text-right rounded-b-lg">
-                        <button type="button" onClick={onClose} className="mr-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none">Cancel</button>
-                        <button type="submit" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none">Save User</button>
+                        <button type="button" onClick={onClose} className="mr-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none">Cancel</button>
+                        <button type="submit" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-normal rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none">Save User</button>
                     </footer>
                 </form>
             </div>
@@ -336,11 +336,11 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">User Management</h1>
+                    <h1 className="text-xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">User Management</h1>
                     <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Create, edit, and manage user roles and time-based permissions.</p>
                 </div>
                 {canCreate && (
-                    <button onClick={handleCreate} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                    <button onClick={handleCreate} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                         Create New User
                     </button>
                 )}
@@ -352,10 +352,10 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Access Status</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Expires On</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Access Status</th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Expires On</th>
                                     {canPerformActions && (
                                         <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                                     )}
@@ -368,18 +368,18 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({
                                     <tr key={user.id} className={isExpired ? 'bg-gray-50 dark:bg-gray-800/50 opacity-60' : ''}>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
-                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</div>
-                                                {!user.isVerified && <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Unverified</span>}
+                                                <div className="text-sm font-normal text-gray-900 dark:text-gray-100">{user.name}</div>
+                                                {!user.isVerified && <span className="ml-2 px-2 inline-flex text-xs leading-5 font-normal rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Unverified</span>}
                                             </div>
                                             <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                            <span className="px-2 inline-flex text-xs leading-5 font-normal rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-purple-200">
                                                 {user.role}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${isExpired ? 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}`}>
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-normal rounded-full ${isExpired ? 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}`}>
                                                 {isExpired ? 'Expired' : 'Active'}
                                             </span>
                                         </td>
@@ -387,7 +387,7 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({
                                             {user.accessExpiresAt ? new Date(user.accessExpiresAt).toLocaleDateString() : 'Permanent'}
                                         </td>
                                         {canPerformActions && (
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-normal space-x-2">
                                                 {canUpdate && <button onClick={() => handleEdit(user)} className="text-teal-600 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200">{isExpired ? 'Re-activate' : 'Edit'}</button>}
                                                 {canDelete && user.id !== currentUser.id && <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200">Delete</button>}
                                             </td>
@@ -407,10 +407,10 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({
                         Page {currentPage} of {totalPages}
                     </span>
                     <div className="flex items-center gap-2">
-                        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
+                        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 border border-gray-300 dark:border-gray-600 text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
                             Previous
                         </button>
-                        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
+                        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 border border-gray-300 dark:border-gray-600 text-sm font-normal rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
                             Next
                         </button>
                     </div>

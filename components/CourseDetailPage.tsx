@@ -17,13 +17,13 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ course, user
     return (
         <div className="space-y-6">
             <div>
-                <button onClick={onBack} className="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline mb-4">&larr; Back to All Courses</button>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">{course.title}</h1>
+                <button onClick={onBack} className="text-sm font-normal text-teal-600 dark:text-teal-400 hover:underline mb-4">&larr; Back to All Courses</button>
+                <h1 className="text-xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">{course.title}</h1>
                 <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">{course.description}</p>
             </div>
 
             <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Course Progress</h2>
+                <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100">Course Progress</h2>
                 <div className="mt-4">
                     <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
                         <span>{completedLessons} / {totalLessons} Lessons Completed</span>
@@ -36,7 +36,7 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ course, user
             </div>
 
             <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                 <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Lessons</h2>
+                 <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100 mb-4">Lessons</h2>
                  <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                     {course.lessons.map((lesson, index) => {
                         const isCompleted = userProgress?.completedLessons.includes(lesson.id);
@@ -50,12 +50,12 @@ export const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ course, user
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-4 flex-shrink-0 ${isCompleted ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-700'}`}>
                                             {isCompleted
                                                 ? <CheckCircleIcon className="w-5 h-5 text-green-600 dark:text-green-400"/>
-                                                : <span className="font-bold text-gray-600 dark:text-gray-300">{index + 1}</span>
+                                                : <span className="font-normal text-gray-600 dark:text-gray-300">{index + 1}</span>
                                             }
                                         </div>
-                                        <span className="font-medium text-gray-800 dark:text-gray-200">{lesson.title}</span>
+                                        <span className="font-normal text-gray-800 dark:text-gray-200">{lesson.title}</span>
                                     </div>
-                                    <span className="ml-4 px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">
+                                    <span className="ml-4 px-3 py-1 text-xs font-normal rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200">
                                         Start Lesson
                                     </span>
                                 </button>

@@ -1,7 +1,8 @@
 {
-  "name": "Copy of Multiple frameworks Direct access Cybersecurity Controls Navigator",
-  "description": "An interactive web application to browse, search, and understand the National Cybersecurity Authority's Essential Cybersecurity Controls (ECC) and their implementation guidelines.",
+  "name": "Multi Framework Compliance Navigator",
+  "description": "An interactive enterprise GRC platform with collaborative workspaces, AI-powered compliance auditing, and multi-agent cybersecurity department simulation.",
   "requestFramePermissions": [
     "microphone"
-  ]
+  ],
+  "majorCapabilities": []
 }

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
+import { AIService } from '../services/aiService';
 import type { PolicyDocument, AgentSignature, Control, Domain, Subdomain } from '../types';
 import { CheckCircleIcon, CloseIcon, ShieldCheckIcon, SparklesIcon } from './Icons';
 
@@ -23,13 +23,6 @@ export const ComplianceAuditModal: React.FC<ComplianceAuditModalProps> = ({ doc,
         setStage('ciso_review');
         addLog("Initiating Agentic Compliance Audit...");
         
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const model = 'gemini-3-pro-preview';
-        const config = { 
-            responseMimeType: "application/json",
-            thinkingConfig: { thinkingBudget: 32768 }
-        };
-
         try {
             // --- STAGE 1: CISO AGENT ---
             setCurrentThought("AI CISO is analyzing policy governance and regulatory alignment...");
@@ -54,8 +47,10 @@ export const ComplianceAuditModal: React.FC<ComplianceAuditModalProps> = ({ doc,
             Return a JSON object: { "decision": "Approved" | "Needs Revision", "comments": "Detailed feedback" }
             `;
 
-            const cisoRes = await ai.models.generateContent({ model, contents: cisoPrompt, config });
-            const cisoResult = JSON.parse(cisoRes.text || '{}');
+            const cisoResult = await AIService.generateStructuredContent(cisoPrompt, {
+                decision: 'string',
+                comments: 'string'
+            }) as any;
             
             const cisoSig: AgentSignature = {
                 agentRole: 'AI CISO',
@@ -97,8 +92,10 @@ export const ComplianceAuditModal: React.FC<ComplianceAuditModalProps> = ({ doc,
             Return a JSON object: { "decision": "Approved" | "Needs Revision", "comments": "Detailed feedback" }
             `;
             
-            const ctoRes = await ai.models.generateContent({ model, contents: ctoPrompt, config });
-            const ctoResult = JSON.parse(ctoRes.text || '{}');
+            const ctoResult = await AIService.generateStructuredContent(ctoPrompt, {
+                decision: 'string',
+                comments: 'string'
+            }) as any;
 
             const ctoSig: AgentSignature = {
                 agentRole: 'AI CTO',
@@ -136,7 +133,7 @@ export const ComplianceAuditModal: React.FC<ComplianceAuditModalProps> = ({ doc,
                             <ShieldCheckIcon className="w-6 h-6" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Agentic Compliance Audit</h2>
+                            <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100">Agentic Compliance Audit</h2>
                             <p className="text-sm text-gray-500 dark:text-gray-400">Validating: {controlData.control.id}</p>
                         </div>
                     </div>
@@ -147,13 +144,13 @@ export const ComplianceAuditModal: React.FC<ComplianceAuditModalProps> = ({ doc,
                     {stage === 'init' && (
                         <div className="text-center py-10">
                             <SparklesIcon className="w-16 h-16 mx-auto text-teal-500 mb-4 animate-pulse" />
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Ready to Audit</h3>
+                            <h3 className="text-lg font-normal text-gray-900 dark:text-gray-100">Ready to Audit</h3>
                             <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mt-2">
                                 This process will deploy autonomous AI agents (CISO & CTO personas) to review your policy against the official NCA ECC Guidelines.
                             </p>
                             <button 
                                 onClick={runAudit}
-                                className="mt-6 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium shadow-lg transition-all transform hover:scale-105"
+                                className="mt-6 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-normal shadow-lg transition-all transform hover:scale-105"
                             >
                                 Start AI Audit
                             </button>
@@ -175,10 +172,10 @@ export const ComplianceAuditModal: React.FC<ComplianceAuditModalProps> = ({ doc,
                                 {signatures.map((sig, idx) => (
                                     <div key={idx} className={`p-4 rounded-lg border ${sig.decision === 'Approved' ? 'border-green-200 bg-green-50 dark:bg-green-900/20' : 'border-red-200 bg-red-50 dark:bg-red-900/20'}`}>
                                         <div className="flex justify-between items-start mb-2">
-                                            <span className="font-bold text-gray-800 dark:text-gray-200">{sig.agentRole}</span>
+                                            <span className="font-normal text-gray-800 dark:text-gray-200">{sig.agentRole}</span>
                                             {sig.decision === 'Approved' ? 
-                                                <span className="px-2 py-0.5 bg-green-200 text-green-800 text-xs rounded-full font-bold">APPROVED</span> : 
-                                                <span className="px-2 py-0.5 bg-red-200 text-red-800 text-xs rounded-full font-bold">REVISION</span>
+                                                <span className="px-2 py-0.5 bg-green-200 text-green-800 text-xs rounded-full font-normal">APPROVED</span> : 
+                                                <span className="px-2 py-0.5 bg-red-200 text-red-800 text-xs rounded-full font-normal">REVISION</span>
                                             }
                                         </div>
                                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">{sig.comments}</p>

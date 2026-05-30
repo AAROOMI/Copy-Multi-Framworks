@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, Type, FunctionDeclaration } from '@google/genai';
-import type { AssessmentItem, ControlStatus } from '../types';
+import { AIService } from '../services/aiService';
 import { CloseIcon, MicrophoneIcon } from './Icons';
+import { Modality, Type, FunctionDeclaration, LiveServerMessage } from '@google/genai';
+import { type AssessmentItem } from '../types';
 
 const nooraAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230d9488'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
 
@@ -155,7 +156,6 @@ interface NooraAssistantProps {
     hidden?: boolean;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 let nextStartTime = 0;
 
 export const NooraAssistant: React.FC<NooraAssistantProps> = ({ isAssessing, onClose, assessmentData, onUpdateItem, currentControlIndex, onNextControl, assessmentType, onInitiate, onActiveFieldChange, onRequestEvidenceUpload, onGenerateReport, hidden = false }) => {
@@ -165,7 +165,7 @@ export const NooraAssistant: React.FC<NooraAssistantProps> = ({ isAssessing, onC
     const conversationRef = useRef<{ speaker: 'user' | 'assistant', text: string, id: string }[]>([]);
     const currentTurnId = useRef<string | null>(null);
 
-    const sessionPromise = useRef<Promise<LiveSession> | null>(null);
+    const sessionPromise = useRef<Promise<any> | null>(null);
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
     const sources = useRef(new Set<AudioBufferSourceNode>());
@@ -252,8 +252,8 @@ If the user mentions a document/file, call \`request_evidence_upload\`.
 
 Be professional, direct, and ensure the user *sees* the field glowing before you ask the question.`;
 
-                    sessionPromise.current = ai.live.connect({
-                        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                    sessionPromise.current = AIService.getAI().live.connect({
+                        model: 'gemini-3.1-flash-live-preview',
                         callbacks: {
                             onopen: () => {
                                 setStatus('listening');
@@ -261,13 +261,12 @@ Be professional, direct, and ensure the user *sees* the field glowing before you
                                 scriptProcessorRef.current = inputAudioContextRef.current!.createScriptProcessor(4096, 1, 1);
                                 scriptProcessorRef.current.onaudioprocess = (audioProcessingEvent) => {
                                     const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
-                                    const pcmBlob: Blob = {
-                                        data: encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer)),
-                                        mimeType: 'audio/pcm;rate=16000',
-                                    };
+                                    const pcmData = encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer));
                                     if (sessionPromise.current) {
                                        sessionPromise.current.then((session) => {
-                                            session.sendRealtimeInput({ media: pcmBlob });
+                                            session.sendRealtimeInput({ 
+                                                audio: { data: pcmData, mimeType: 'audio/pcm;rate=16000' } 
+                                            });
                                         });
                                     }
                                 };
@@ -414,7 +413,6 @@ Be professional, direct, and ensure the user *sees* the field glowing before you
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
                             systemInstruction: systemInstruction,
                             tools: [{ functionDeclarations: [updateFunctionDeclaration, initiateNewAssessmentDeclaration, requestEvidenceUploadDeclaration, focusOnFieldDeclaration, submitAssessmentReportDeclaration] }],
-                            languageCodes: ['en-US', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA'],
                         },
                     });
                 } catch (err: any) {
@@ -453,7 +451,7 @@ Be professional, direct, and ensure the user *sees* the field glowing before you
                      <div className="flex items-center">
                         <img src={nooraAvatar} alt="Noora" className="w-10 h-10 rounded-full mr-3" />
                         <div>
-                            <h2 className="font-bold text-lg text-gray-800 dark:text-gray-100">Noora: AI Voice Assessment</h2>
+                            <h2 className="font-normal text-base text-gray-800 dark:text-gray-100 uppercase tracking-wide">Noora: AI Voice Assessment</h2>
                             <p className="text-xs text-gray-500 dark:text-gray-400">Assessing: {assessmentType}</p>
                         </div>
                     </div>
@@ -463,7 +461,7 @@ Be professional, direct, and ensure the user *sees* the field glowing before you
                 </header>
 
                 <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-                    <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">Current Control:</p>
+                    <p className="text-xs font-normal text-gray-600 dark:text-gray-300 uppercase tracking-widest">Current Control:</p>
                     <p className="font-mono text-teal-600 dark:text-teal-400">{currentControl.controlCode}: <span className="font-sans text-gray-800 dark:text-gray-200 font-normal">{currentControl.controlName}</span></p>
                 </div>
                  
@@ -502,7 +500,7 @@ Be professional, direct, and ensure the user *sees* the field glowing before you
                                 ${status === 'thinking' ? 'border-purple-400' : ''}
                             `}></div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 capitalize">{status}</p>
+                        <p className="text-xs font-normal text-gray-600 dark:text-gray-400 capitalize uppercase tracking-widest">{status}</p>
                         {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
                     </div>
                 </main>
@@ -511,7 +509,7 @@ Be professional, direct, and ensure the user *sees* the field glowing before you
                     <button 
                         onClick={onNextControl}
                         disabled={currentControlIndex >= assessmentData.length - 1}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 disabled:bg-gray-400"
                     >
                         Next Control &rarr;
                     </button>

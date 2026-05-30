@@ -51,9 +51,9 @@ const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ chi
 
 const StatCard: React.FC<{ title: string; value: string | number; description?: string }> = ({ title, value, description }) => (
     <Card>
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</h3>
-        <p className="mt-1 text-4xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
-        {description && <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{description}</p>}
+        <h3 className="text-sm font-normal text-gray-500 dark:text-gray-400 truncate uppercase tracking-wider">{title}</h3>
+        <p className="mt-1 text-xl font-normal text-gray-900 dark:text-gray-100">{value}</p>
+        {description && <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{description}</p>}
     </Card>
 );
 
@@ -108,11 +108,11 @@ const OverallComplianceChart: React.FC<{ percentage: number }> = ({ percentage }
 
     return (
         <Card className="flex flex-col items-center justify-center">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Overall Compliance</h3>
+            <h3 className="text-sm font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Overall Compliance</h3>
             <div className="relative w-48 h-24">
                 <canvas ref={canvasRef}></canvas>
                 <div className="absolute inset-0 flex items-end justify-center">
-                    <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">{percentage.toFixed(0)}%</span>
+                    <span className="text-2xl font-normal text-gray-900 dark:text-gray-100">{percentage.toFixed(0)}%</span>
                 </div>
             </div>
         </Card>
@@ -168,7 +168,7 @@ const StatusDistributionChart: React.FC<{ data: Record<string, number> }> = ({ d
     
     return (
         <Card>
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Document Status</h3>
+            <h3 className="text-base font-normal text-gray-700 dark:text-gray-200 mb-4">Document Status</h3>
             <div className="h-64">
                 <canvas ref={canvasRef} />
             </div>
@@ -240,7 +240,7 @@ const DomainComplianceChart: React.FC<{ data: { name: string, compliance: number
 
     return (
         <Card>
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Compliance by Domain</h3>
+            <h3 className="text-base font-normal text-gray-700 dark:text-gray-200 mb-4">Compliance by Domain</h3>
             <div className="h-96">
                 <canvas ref={canvasRef}></canvas>
             </div>
@@ -267,7 +267,7 @@ const BadgeIcon: React.FC<{ badgeId: string }> = ({ badgeId }) => {
     return (
         <div className="text-center">
             {iconMap[badgeId] || null}
-            <p className="text-xs mt-1 font-semibold text-gray-600 dark:text-gray-400">{course?.title.replace('Cybersecurity ', '').replace('Awareness', '').replace('Security', '')}</p>
+            <p className="text-xs mt-1 font-normal text-gray-600 dark:text-gray-400">{course?.title.replace('Cybersecurity ', '').replace('Awareness', '').replace('Security', '')}</p>
         </div>
     );
 }
@@ -337,21 +337,21 @@ const FrameworkMeter: React.FC<{
 
     return (
         <div className={`bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-col items-center justify-between ${disabled ? 'opacity-60' : ''}`}>
-            <h3 className="text-base font-semibold text-gray-700 dark:text-gray-200 text-center">{title}</h3>
+            <h3 className="text-base font-normal text-gray-700 dark:text-gray-200 text-center">{title}</h3>
             <div className="relative w-32 h-32 my-4">
                 <canvas ref={canvasRef}></canvas>
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-3xl font-bold text-gray-900 dark:text-gray-100 ${disabled ? 'text-gray-500' : ''}`}>
+                    <span className={`text-xl font-normal text-gray-900 dark:text-gray-100 ${disabled ? 'text-gray-500' : ''}`}>
                         {disabled ? 'N/A' : `${percentage.toFixed(0)}%`}
                     </span>
                 </div>
             </div>
             {onNavigate && !disabled ? (
-                 <button onClick={onNavigate} className="w-full text-center py-2 px-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                 <button onClick={onNavigate} className="w-full text-center py-2 px-3 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                     View Details
                 </button>
             ) : (
-                 <button disabled className="w-full text-center py-2 px-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-400 dark:bg-gray-600 cursor-not-allowed">
+                 <button disabled className="w-full text-center py-2 px-3 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-gray-400 dark:bg-gray-600 cursor-not-allowed">
                     {disabled ? 'Not Started' : 'View Details'}
                 </button>
             )}
@@ -418,7 +418,7 @@ const TaskManager: React.FC<{
 
     return (
         <Card className="flex flex-col h-full">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">My Tasks</h3>
+            <h3 className="text-base font-normal text-gray-700 dark:text-gray-200 mb-4">My Tasks</h3>
             <form onSubmit={handleAddTask} className="flex items-center gap-2 mb-4">
                 <input
                     type="text"
@@ -435,13 +435,13 @@ const TaskManager: React.FC<{
                     <option value="">Link Control (Optional)</option>
                     {controls.map(c => <option key={c.control.id} value={c.control.id}>{c.control.id}</option>)}
                 </select>
-                <button type="submit" className="px-4 py-2 text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">Add</button>
+                <button type="submit" className="px-4 py-2 text-sm font-normal rounded-md text-white bg-teal-600 hover:bg-teal-700">Add</button>
             </form>
             <div className="flex-grow overflow-y-auto pr-2 min-h-[300px]">
                 {(['To Do', 'In Progress', 'Done'] as TaskStatus[]).map(status => (
                     sortedTasks[status].length > 0 && (
                         <div key={status} className="mb-4">
-                             <h4 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{status}</h4>
+                             <h4 className="text-xs font-normal text-gray-500 dark:text-gray-400 uppercase mb-2">{status}</h4>
                             <ul className="space-y-2">
                                 {sortedTasks[status].map(task => (
                                     <li key={task.id} className="flex items-center gap-3 p-2 rounded-md bg-gray-50 dark:bg-gray-900/50">
@@ -539,34 +539,44 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ repository, curren
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Compliance Dashboard</h1>
-                <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Welcome, {currentUser?.name}. Here's your compliance overview.</p>
+                <h1 className="text-base font-normal text-gray-800 dark:text-gray-100 tracking-tight">Compliance Dashboard</h1>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Welcome, {currentUser?.name}. Here's your compliance overview.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <OverallComplianceChart percentage={stats.compliance} />
-                <StatCard title="Control Coverage" value={`${stats.coverage.toFixed(0)}%`} description={`${repository.length} of ${stats.totalControls} controls have documents.`} />
+                <Card className="flex flex-col justify-between">
+                    <div>
+                        <h3 className="text-sm font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wider">Control Coverage</h3>
+                        <p className="mt-2 text-xl font-normal text-gray-900 dark:text-gray-100">{stats.coverage.toFixed(0)}%</p>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <span className="font-normal text-teal-600 dark:text-teal-400">{repository.length}</span> of <span className="font-normal">{stats.totalControls}</span> controls have associated documents.
+                        </p>
+                    </div>
+                </Card>
                 <StatCard title="Approved Policies" value={stats.approvedCount} description="Fully implemented controls." />
                 
                 {/* Risk Posture Card */}
                 <Card>
                     <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Risk Posture</h3>
+                        <h3 className="text-sm font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wider">Risk Posture</h3>
                         <ExclamationTriangleIcon className="w-5 h-5 text-orange-500" />
                     </div>
                     <div className="mt-4 flex items-end justify-between">
                         <div>
-                            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{riskStats.critical}</p>
-                            <p className="text-xs font-semibold text-red-600 uppercase">Critical Risks</p>
+                            <p className="text-xl font-normal text-gray-900 dark:text-gray-100">{riskStats.critical}</p>
+                            <p className="text-[10px] font-normal text-red-600 uppercase tracking-wide">Critical Risks</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-xl font-bold text-gray-700 dark:text-gray-300">{riskStats.high}</p>
-                            <p className="text-xs font-semibold text-orange-500 uppercase">High Risks</p>
+                            <p className="text-lg font-normal text-gray-700 dark:text-gray-300">{riskStats.high}</p>
+                            <p className="text-[10px] font-normal text-orange-500 uppercase tracking-wide">High Risks</p>
                         </div>
                     </div>
                     <button 
                         onClick={() => onSetView('riskAssessment')} 
-                        className="mt-4 w-full text-xs font-medium text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-300 text-right"
+                        className="mt-4 w-full text-[10px] font-normal text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-300 text-right uppercase tracking-widest"
                     >
                         View Risk Register &rarr;
                     </button>
@@ -574,7 +584,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ repository, curren
             </div>
 
             <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Frameworks Compliance</h2>
+                <h2 className="text-lg font-normal text-gray-800 dark:text-gray-100">Frameworks Compliance</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     <FrameworkMeter 
                         title="NCA ECC" 
@@ -610,16 +620,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ repository, curren
                     <TaskManager tasks={tasks} setTasks={setTasks} controls={allControls} />
                 </div>
                  <Card>
-                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">My Approval Tasks ({myApprovalTasks.length})</h3>
+                    <h3 className="text-base font-normal text-gray-700 dark:text-gray-200 mb-4">My Approval Tasks ({myApprovalTasks.length})</h3>
                     {myApprovalTasks.length > 0 ? (
                         <ul className="divide-y divide-gray-200 dark:divide-gray-700 max-h-[420px] overflow-y-auto">
                            {myApprovalTasks.map(task => (
                                 <li key={task.id} className="py-3 flex items-center justify-between">
                                    <div>
-                                     <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{task.controlId}</p>
+                                     <p className="text-sm font-normal text-gray-800 dark:text-gray-200">{task.controlId}</p>
                                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate w-60">{task.controlDescription}</p>
                                    </div>
-                                    <button onClick={() => onSetView('documents')} className="text-sm font-semibold text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200">
+                                    <button onClick={() => onSetView('documents')} className="text-sm font-normal text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-200">
                                         View
                                     </button>
                                 </li>
@@ -648,14 +658,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ repository, curren
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
-                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Recent Activity</h3>
+                    <h3 className="text-base font-normal text-gray-700 dark:text-gray-200 mb-4">Recent Activity</h3>
                     <ul className="space-y-4">
                         {recentActivity.map(doc => (
                             <li key={doc.id} className="flex items-start space-x-3">
                                 <div className={`mt-1 flex-shrink-0 h-5 w-5 rounded-full`} style={{ backgroundColor: getStatusColor(doc.status) }}></div>
                                 <div className="flex-1">
                                     <p className="text-sm text-gray-700 dark:text-gray-300">
-                                        <span className="font-semibold">{doc.controlId}</span> was updated to <span className="font-semibold">{doc.status}</span>.
+                                        <span className="font-normal">{doc.controlId}</span> was updated to <span className="font-normal">{doc.status}</span>.
                                     </p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">
                                         {new Date(doc.updatedAt).toLocaleString()}
@@ -666,7 +676,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ repository, curren
                     </ul>
                 </Card>
                 <Card>
-                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">My Achievements</h3>
+                    <h3 className="text-base font-normal text-gray-700 dark:text-gray-200 mb-4">My Achievements</h3>
                     {earnedBadges.length > 0 ? (
                         <div className="flex flex-wrap items-center justify-center gap-8 py-4">
                             {earnedBadges.map(badgeId => <BadgeIcon key={badgeId} badgeId={badgeId} />)}
@@ -676,7 +686,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ repository, curren
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                 Start a course in the "Training & Awareness" section to earn badges.
                             </p>
-                             <button onClick={() => onSetView('training')} className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
+                             <button onClick={() => onSetView('training')} className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
                                 Go to Training
                             </button>
                         </div>

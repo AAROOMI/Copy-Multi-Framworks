@@ -54,7 +54,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ isOpen, onToggle, messag
                         <img src={nooraAvatar} alt="Noora" className="w-8 h-8 rounded-full" />
                     </div>
                     <div>
-                        <h3 className="text-white font-semibold">Noora</h3>
+                        <h3 className="text-white font-normal">Noora</h3>
                         <p className="text-teal-100 text-xs">AI Cybersecurity Assistant</p>
                     </div>
                 </div>

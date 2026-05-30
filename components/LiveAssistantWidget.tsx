@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, Type, FunctionDeclaration } from '@google/genai';
+import { GoogleGenAI, LiveServerMessage, Modality, Blob, Type, FunctionDeclaration } from '@google/genai';
 import { CloseIcon, MicrophoneIcon, SparklesIcon } from './Icons';
 import type { View, Risk, LiveAssistantProps } from '../types';
 import { virtualAgents } from '../data/virtualAgents';
+
+import { LocalLLM } from '../services/localLLM';
 
 // Audio utility functions
 function encode(bytes: Uint8Array) {
@@ -44,10 +46,10 @@ async function decodeAudioData(
     return buffer;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.API_KEY || '' });
 let nextStartTime = 0;
 
-export const LiveAssistantWidget: React.FC<LiveAssistantProps> = ({ 
+export const LiveAssistantWidget: React.FC<LiveAssistantProps & { onStatusChange?: (status: string) => void }> = ({ 
     isOpen, 
     onToggle, 
     onNavigate, 
@@ -64,14 +66,19 @@ export const LiveAssistantWidget: React.FC<LiveAssistantProps> = ({
     onAddRisk,
     onGenerateReport,
     onInitiateAssessment,
-    onDelegateTask
+    onDelegateTask,
+    onStatusChange
 }) => {
     const [status, setStatus] = useState<'idle' | 'listening' | 'thinking' | 'speaking'>('idle');
+    
+    useEffect(() => {
+        if (onStatusChange) onStatusChange(status);
+    }, [status, onStatusChange]);
     const [error, setError] = useState<string | null>(null);
     const [userTranscript, setUserTranscript] = useState('');
     const [assistantTranscript, setAssistantTranscript] = useState('');
     
-    const sessionPromise = useRef<Promise<LiveSession> | null>(null);
+    const sessionPromise = useRef<Promise<any> | null>(null);
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
     const sources = useRef(new Set<AudioBufferSourceNode>());
@@ -167,6 +174,7 @@ export const LiveAssistantWidget: React.FC<LiveAssistantProps> = ({
             3. If a user asks you to do something outside your specific role (e.g. asking the CTO to do a Compliance Audit), politely defer to the correct colleague (e.g., "That is Asaad's domain.").
             4. Speak in the first person ("I will...", "My analysis shows...").
             5. Use a tone consistent with your job attributes (e.g., CISO is serious/protective, Auditor is skeptical/factual).
+            6. **NATURAL LANGUAGE INSTRUCTION:** Avoid sounding robotic. Use conversational fillers occasionally, vary your sentence structure, and sound like a colleague, not an automated system. Use natural human-like language and expressions.
             
             **INTER-AGENT COLLABORATION:**
             You are aware of your colleagues:
@@ -253,6 +261,23 @@ export const LiveAssistantWidget: React.FC<LiveAssistantProps> = ({
         if (isOpen) {
             const startSession = async () => {
                 try {
+                    if (!navigator.onLine) {
+                        // Local LLM Fallback
+                        setStatus('listening');
+                        // In a real app, we'd use SpeechRecognition API here
+                        // For this demo, we'll simulate a local response after a delay
+                        setTimeout(async () => {
+                            setStatus('thinking');
+                            const response = await LocalLLM.generateResponse("hello");
+                            setStatus('speaking');
+                            const utterance = new SpeechSynthesisUtterance(response);
+                            utterance.onend = () => setStatus('listening');
+                            window.speechSynthesis.speak(utterance);
+                            setAssistantTranscript(response);
+                        }, 2000);
+                        return;
+                    }
+
                     if (!process.env.API_KEY) throw new Error("API key is not configured.");
                     if (!navigator.mediaDevices?.getUserMedia) throw new Error("Your browser does not support audio recording.");
 
@@ -280,11 +305,10 @@ export const LiveAssistantWidget: React.FC<LiveAssistantProps> = ({
                                 scriptProcessorRef.current = inputAudioContextRef.current!.createScriptProcessor(4096, 1, 1);
                                 scriptProcessorRef.current.onaudioprocess = (e) => {
                                     const inputData = e.inputBuffer.getChannelData(0);
-                                    const pcmBlob: Blob = {
-                                        data: encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer)),
-                                        mimeType: 'audio/pcm;rate=16000',
-                                    };
-                                    sessionPromise.current?.then(session => session.sendRealtimeInput({ media: pcmBlob }));
+                                    const pcmData = encode(new Uint8Array(new Int16Array(inputData.map(x => x * 32768)).buffer));
+                                    sessionPromise.current?.then(session => session.sendRealtimeInput({ 
+                                        audio: { data: pcmData, mimeType: 'audio/pcm;rate=16000' } 
+                                    }));
                                 };
                                 source.connect(scriptProcessorRef.current);
                                 scriptProcessorRef.current.connect(inputAudioContextRef.current!.destination);
@@ -398,7 +422,6 @@ export const LiveAssistantWidget: React.FC<LiveAssistantProps> = ({
                             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } },
                             systemInstruction: generateContextPrompt, // DYNAMIC BRAIN PROMPT WITH PERSONA
                             tools: [{ functionDeclarations: tools }],
-                            languageCodes: ['en-US', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA'],
                         },
                     });
                 } catch (err: any) {
@@ -444,7 +467,7 @@ export const LiveAssistantWidget: React.FC<LiveAssistantProps> = ({
                                     </div>
                                 )}
                                 <div>
-                                    <h2 className="font-bold text-lg text-gray-800 dark:text-gray-100">{activeAgent ? activeAgent.name : "Noora (Orchestrator)"}</h2>
+                                    <h2 className="font-normal text-base text-gray-800 dark:text-gray-100">{activeAgent ? activeAgent.name : "Noora (Orchestrator)"}</h2>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">{activeAgent ? activeAgent.title : "Application Brain & Navigator"}</p>
                                 </div>
                             </div>
@@ -464,7 +487,7 @@ export const LiveAssistantWidget: React.FC<LiveAssistantProps> = ({
                                 `}></div>
                             </div>
                             
-                            <p className="text-xl font-bold text-gray-800 dark:text-gray-100 capitalize mb-1">{status === 'idle' ? 'Ready' : status}</p>
+                            <p className="text-lg font-normal text-gray-800 dark:text-gray-100 capitalize mb-1">{status === 'idle' ? 'Ready' : status}</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                                 {status === 'listening' ? 'I am listening to your command...' : 
                                  status === 'thinking' ? `Consulting ${activeAgent ? activeAgent.role : 'System'} logic...` : 

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
+import { AIService } from './services/aiService';
 import { Sidebar } from './components/Sidebar';
 import { DashboardPage } from './components/Dashboard';
 import { DocumentsPage } from './components/DocumentsPage';
@@ -19,20 +19,30 @@ import { HelpSupportPage } from './components/HelpSupportPage';
 import { TrainingPage } from './components/TrainingPage';
 import { RiskAssessmentPage } from './components/RiskAssessmentPage';
 import { ComplianceAgentPage } from './components/ComplianceAgentPage';
+import { LiveVoiceDemoPage } from './components/LiveVoiceDemoPage';
 import { SuperAdminPage } from './components/SuperAdminPage';
 import { IntegrationsPage } from './components/IntegrationsPage';
 import { VaptOrchestratorPage } from './components/VaptOrchestratorPage';
 import { AssetInventoryPage } from './components/AssetInventoryPage';
 import { VirtualDepartmentPage } from './components/VirtualDepartmentPage';
+import { MeetingRoomPage } from './components/MeetingRoomPage';
+import { MultiplayerWhiteboard } from './components/MultiplayerWhiteboard';
 import { DidEmbed } from './components/DidEmbed';
 import { LiveAssistantWidget } from './components/LiveAssistantWidget';
+import { SparklesIcon } from './components/Icons';
 import { MfaSetupPage } from './components/MfaSetupPage';
 import { MfaVerifyPage } from './components/MfaVerifyPage';
 import { TourGuide } from './components/TourGuide';
 import { TrainingAssistant } from './components/TrainingAssistant';
 import { RiskAssistant } from './components/RiskAssistant';
+import { BreadcrumbReferenceSheet } from './components/BreadcrumbReferenceSheet';
+import { AccordionShowcase } from './components/AccordionShowcase';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { auth, db } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { eccData } from './data/controls';
 import { dbAPI } from './db';
+import { virtualAgents } from './data/virtualAgents';
 import { 
   rolePermissions, 
   type User, 
@@ -64,6 +74,8 @@ export default function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [isLoading, setIsLoading] = useState(true);
   
+  const [isOnline, setIsOnline] = useState(window.navigator.onLine);
+  
   // Data State
   const [documents, setDocuments] = useState<PolicyDocument[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -84,6 +96,8 @@ export default function App() {
   const [activeControlId, setActiveControlId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<{id: string, message: string, type: 'success' | 'info' | 'error'}[]>([]);
   const [showLiveAssistant, setShowLiveAssistant] = useState(false);
+  const [isHeadlessMode, setIsHeadlessMode] = useState(false);
+  const [assistantStatus, setAssistantStatus] = useState('idle');
   const [showTour, setShowTour] = useState(false);
   const [activeVirtualAgent, setActiveVirtualAgent] = useState<VirtualAgent | null>(null);
   
@@ -99,19 +113,60 @@ export default function App() {
 
   // --- Initialization ---
   useEffect(() => {
-    const init = async () => {
-      const user = await dbAPI.loginUser(''); // Check for existing session
-      if (user) {
-        if (user.mfaEnabled) {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setIsLoading(true);
+      if (firebaseUser) {
+        let user = await dbAPI.getUser(firebaseUser.uid);
+        if (!user) {
+          // Create default profile if missing during refresh
+          user = {
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+            email: firebaseUser.email || '',
+            role: (firebaseUser.email === 'aaroomi@gmail.com' || firebaseUser.email === 'aerummi@gmail.com') ? 'Super Admin' : 'Security Analyst',
+            isVerified: true,
+            companyId: 'demo-company',
+            mfaEnabled: false
+          };
+          await dbAPI.createUser(user, 'demo-company');
+        }
+
+        if (user) {
+          // ADMIN OVERRIDE
+          if (user.email === 'aaroomi@gmail.com' || user.email === 'aerummi@gmail.com') {
+            user.role = 'Super Admin';
+          }
+          
+          if (user.mfaEnabled) {
             setPendingMfaUser(user);
             setShowMfaVerify(true);
-        } else {
+          } else {
             await loadCompanyData(user);
+          }
+        }
+      } else {
+        // Fallback for simulated super admin session
+        const silentUser = await dbAPI.loginUser('', ''); // Trigger silent check (includes simulation)
+        if (silentUser) {
+            await loadCompanyData(silentUser);
+        } else {
+            setCurrentUser(null);
+            setCompany(null);
         }
       }
       setIsLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
-    init();
   }, []);
 
   useEffect(() => {
@@ -123,10 +178,21 @@ export default function App() {
   }, [theme]);
 
   const loadCompanyData = async (user: User) => {
-    if (!user.companyId) return;
+    // Fallback for Super Admin if companyId is missing, or for specific user
+    let effectiveCompanyId = user.companyId;
+    if (!effectiveCompanyId && (user.role === 'Super Admin' || user.email === 'aaroomi@gmail.com' || user.email === 'aerummi@gmail.com')) {
+      effectiveCompanyId = 'demo-company';
+    }
+
+    if (!effectiveCompanyId) {
+      setCurrentUser(user);
+      setIsLoading(false);
+      return;
+    }
+
     try {
         setIsLoading(true);
-        const data = await dbAPI.getCompanyData(user.companyId);
+        const data = await dbAPI.getCompanyData(effectiveCompanyId);
         setCompany(data.companyProfile);
         setUsers(data.users);
         setDocuments(data.documents);
@@ -144,7 +210,24 @@ export default function App() {
         setCurrentUser(user);
     } catch (error) {
         console.error("Failed to load company data", error);
-        addNotification("Failed to load application data.", "error");
+        addNotification("Failed to load application data. Using demo session.", "info");
+        // Fallback to demo data if live load fails
+        const demoData = await dbAPI.getCompanyData('demo-company');
+        setCompany(demoData.companyProfile);
+        setUsers(demoData.users);
+        setDocuments(demoData.documents);
+        setAuditLog(demoData.auditLog);
+        setTasks(demoData.tasks);
+        setAgentLog(demoData.agentLog);
+        setEccAssessment(demoData.eccAssessment);
+        setPdplAssessment(demoData.pdplAssessment);
+        setSamaCsfAssessment(demoData.samaCsfAssessment);
+        setCmaAssessment(demoData.cmaAssessment);
+        setRisks(demoData.riskAssessmentData);
+        setAssets(demoData.assets);
+        setTrainingProgress(demoData.trainingProgress);
+        setAssessmentStatuses(demoData.assessmentStatuses);
+        setCurrentUser(user);
     } finally {
         setIsLoading(false);
     }
@@ -180,22 +263,87 @@ export default function App() {
   // --- Auth Handlers ---
 
   const handleLogin = async (email: string, password: string): Promise<{error: string, code?: string} | null> => {
-    const user = await dbAPI.loginUser(email, password);
-    if (user) {
-        if (!user.isVerified) return { error: "Email not verified.", code: 'unverified' };
-        if (user.accessExpiresAt && user.accessExpiresAt < Date.now()) return { error: "Account access expired.", code: 'expired' };
-        
-        if (user.mfaEnabled) {
-            setPendingMfaUser(user);
-            setShowMfaVerify(true);
+    try {
+        setIsLoading(true);
+        const user = await dbAPI.loginUser(email, password);
+        if (user) {
+            if (!user.isVerified) {
+                setIsLoading(false);
+                return { error: "Email not verified.", code: 'unverified' };
+            }
+            if (user.accessExpiresAt && user.accessExpiresAt < Date.now()) {
+                setIsLoading(false);
+                return { error: "Account access expired.", code: 'expired' };
+            }
+            
+            if (user.mfaEnabled) {
+                setPendingMfaUser(user);
+                setShowMfaVerify(true);
+                setIsLoading(false);
+                return null;
+            }
+            
+            // For real Firebase users, onAuthStateChanged will trigger and load data.
+            // For simulated sessions, we MUST call loadCompanyData here.
+            if (!auth.currentUser) {
+                await loadCompanyData(user);
+            } else if (auth.currentUser.uid !== user.id) {
+                // If there's a mismatch or delay, load it just in case
+                await loadCompanyData(user);
+            }
+            
+            handleAddAuditLog('USER_LOGIN', `User ${user.email} logged in.`);
             return null;
+        }
+        setIsLoading(false);
+        return { error: "Invalid credentials." };
+    } catch (error: any) {
+        setIsLoading(false);
+        return { error: error.message || "An unexpected error occurred during login." };
+    }
+  };
+
+  const handleGoogleLogin = async (): Promise<{error: string} | null> => {
+    try {
+        const user = await dbAPI.loginWithGoogle();
+        if (user) {
+            await loadCompanyData(user);
+            handleAddAuditLog('USER_LOGIN', `User ${user.email} logged in via Google.`);
+            return null;
+        }
+        return { error: "Google login failed." };
+    } catch (error: any) {
+        return { error: error.message || "Google login failed." };
+    }
+  };
+
+  const handleMetaMaskLogin = async (address: string): Promise<{error: string} | null> => {
+    try {
+        // In this app, we associate the wallet with an existing user or create a session.
+        // For demo, we'll try to find a user with this "address" or just login as admin if it matches a known one,
+        // or just simulate a successful login for the demo session.
+        console.log("Logged in with MetaMask address:", address);
+        
+        // Find user by address or role
+        let user = users.find(u => u.id === address); // Simple mock
+        if (!user) {
+            // For demo, if MetaMask connects, we give them a temporary session if not in DB
+            user = {
+                id: address,
+                name: `Web3 User (${address.slice(0, 6)}...)`,
+                email: `${address.slice(0, 6)}@metamask.io`,
+                role: 'Security Analyst',
+                isVerified: true,
+                companyId: company?.id || 'demo-company'
+            };
         }
         
         await loadCompanyData(user);
-        handleAddAuditLog('USER_LOGIN', `User ${user.email} logged in.`);
+        handleAddAuditLog('USER_LOGIN', `User ${user.name} logged in via MetaMask.`);
         return null;
+    } catch (error: any) {
+        return { error: error.message || "MetaMask login failed on server." };
     }
-    return { error: "Invalid credentials." };
   };
 
   const handleMfaVerify = async (userId: string, code: string) => {
@@ -236,7 +384,7 @@ export default function App() {
 
   const handleGeneratePolicyWithAI = async (control: Control, subdomain: Subdomain, domain: Domain, tone: PolicyTone, length: PolicyLength) => {
       if (!company) return;
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
       const prompt = `
         Generate a comprehensive cybersecurity policy document for the following control:
         Control ID: ${control.id}
@@ -255,13 +403,15 @@ export default function App() {
       `;
 
       try {
-          const response = await ai.models.generateContent({
-              model: 'gemini-3-flash-preview',
-              contents: prompt,
-              config: { responseMimeType: 'application/json' }
+          const response = await AIService.generateStructuredContent(prompt, { 
+              policy: 'string', 
+              procedure: 'string', 
+              guideline: 'string' 
           });
           
-          const content = JSON.parse(response.text || '{}') as GeneratedContent;
+          if (!response) throw new Error("Empty response from AI Service");
+          
+          const content = response as unknown as GeneratedContent;
           
           const newDoc: PolicyDocument = {
               id: `doc-${Date.now()}`,
@@ -344,12 +494,14 @@ export default function App() {
         <div className={theme}>
             <LoginPage 
                 onLogin={handleLogin} 
+                onMetaMaskLogin={handleMetaMaskLogin}
+                onGoogleLogin={handleGoogleLogin}
                 theme={theme} 
                 toggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')} 
                 onSetupCompany={() => setCurrentView('companySetup')} 
                 onVerify={() => true} 
-                onForgotPassword={async () => ({ success: true, message: "Reset link sent" })}
-                onResetPassword={async () => ({ success: true, message: "Password reset" })}
+                onForgotPassword={dbAPI.sendPasswordResetLink.bind(dbAPI)}
+                onResetPassword={dbAPI.resetPassword.bind(dbAPI)}
             />
             {currentView === 'companySetup' && (
                 <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900">
@@ -377,7 +529,8 @@ export default function App() {
   }
 
   return (
-    <div className={`flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-200 ${theme}`}>
+    <ErrorBoundary>
+      <div className={`flex h-screen bg-transparent text-slate-100 font-sans transition-colors duration-200 ${theme}`}>
       <Sidebar 
         domains={eccData} 
         selectedDomain={selectedDomain} 
@@ -388,59 +541,101 @@ export default function App() {
         trainingProgress={trainingProgress}
       />
       
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Top Header */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center shadow-sm z-10">
+        <header className="glass-panel border-white/5 h-[58px] m-4 mb-0 flex justify-between items-center px-6 shadow-2xl z-20">
             <div className="flex items-center gap-4">
-                <button onClick={() => {}} className="md:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                <button onClick={() => {}} className="md:hidden p-2 rounded-md hover:bg-white/10 text-white/70">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
                 <div className="flex flex-col">
-                    <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 leading-tight">{company.name}</h2>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">Cybersecurity Controls Navigator</span>
+                    <h2 className="text-[13px] font-medium text-white/90 leading-tight uppercase tracking-tight">{company.name}</h2>
+                    <span className="text-[9px] text-slate-500 uppercase tracking-[0.2em] font-bold">Cybersecurity Navigator</span>
                 </div>
             </div>
-            <div className="flex items-center gap-4">
-                <button
-                    onClick={() => setShowLiveAssistant(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-teal-500 to-blue-600 text-white text-xs font-bold rounded-full shadow-lg hover:shadow-xl transition-all animate-pulse"
-                >
-                    <span className="w-2 h-2 bg-white rounded-full"></span>
-                    Live Assistant
-                </button>
-                <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-                    {theme === 'light' ? 
-                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg> : 
-                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    }
-                </button>
-                <div className="relative">
-                    <button onClick={handleLogout} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-red-500">Sign Out</button>
+            <div className="flex items-center gap-6">
+                <div className="hidden lg:flex items-center gap-4 border-r border-white/5 pr-6 mr-2">
+                    <button
+                        onClick={() => {
+                            setIsHeadlessMode(true);
+                            setShowLiveAssistant(true);
+                        }}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all border ${
+                            showLiveAssistant && isHeadlessMode 
+                            ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 animate-pulse' 
+                            : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white/80'
+                        }`}
+                        title="Navigate with voice"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                        <span className="text-[9px] font-bold uppercase tracking-wider">Voice</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            setIsHeadlessMode(false);
+                            setShowLiveAssistant(true);
+                        }}
+                        className="flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[9px] font-bold uppercase tracking-wider rounded-full shadow-lg shadow-cyan-500/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                        <SparklesIcon className="w-3 h-3" />
+                        Live Assistant
+                    </button>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
+                        {theme === 'light' ? 
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg> : 
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        }
+                    </button>
+                    {!isOnline ? (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 shadow-sm shadow-amber-500/10">
+                            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>
+                            <span className="text-[9px] font-bold uppercase tracking-wider">Edge-AI Optimized fallback active</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-teal-500/10 border border-teal-500/20 rounded-full text-teal-400 shadow-sm shadow-teal-500/10">
+                            <div className="flex gap-0.5">
+                                <div className="w-1 h-1 bg-teal-400 rounded-full"></div>
+                                <div className="w-1 h-1 bg-teal-400 rounded-full animate-bounce"></div>
+                                <div className="w-1 h-1 bg-teal-400 rounded-full"></div>
+                            </div>
+                            <span className="text-[9px] font-bold uppercase tracking-wider">Neural-Link: Cloud Verified</span>
+                        </div>
+                    )}
+                    <div className="flex items-center gap-2 px-3 py-1 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-400">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span className="text-[9px] font-bold uppercase tracking-wider">Local LLM: Ready</span>
+                    </div>
+                    <button onClick={handleLogout} className="text-[11px] font-bold uppercase tracking-wider text-slate-500 hover:text-red-400 transition-colors ml-2">Secure Terminate</button>
                 </div>
             </div>
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto p-4 md:p-8 relative">
-            {currentView === 'sarahAgent' && <DidEmbed />}
-            {currentView === 'dashboard' && (
-                <DashboardPage 
-                    repository={documents} 
-                    currentUser={currentUser} 
-                    allControls={eccData.flatMap(d => d.subdomains.flatMap(s => s.controls.map(c => ({ control: c, subdomain: s, domain: d }))))}
-                    domains={eccData}
-                    onSetView={setCurrentView}
-                    onSelectDomain={handleSelectDomain}
-                    trainingProgress={trainingProgress}
-                    eccAssessment={eccAssessment}
-                    pdplAssessment={pdplAssessment}
-                    samaCsfAssessment={samaCsfAssessment}
-                    cmaAssessment={cmaAssessment}
-                    tasks={tasks}
-                    setTasks={setTasks}
-                    risks={risks}
-                />
-            )}
+        <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 relative">
+            <div className="max-w-[1600px] mx-auto h-full space-y-6">
+                <div className="glass-panel border-white/5 min-h-full p-6 bg-white/[0.02] flex flex-col">
+                    {currentView === 'saraAgent' && <DidEmbed />}
+                    {currentView === 'dashboard' && (
+                        <DashboardPage 
+                            repository={documents} 
+                            currentUser={currentUser} 
+                            allControls={eccData.flatMap(d => d.subdomains.flatMap(s => s.controls.map(c => ({ control: c, subdomain: s, domain: d }))))}
+                            domains={eccData}
+                            onSetView={setCurrentView}
+                            onSelectDomain={handleSelectDomain}
+                            trainingProgress={trainingProgress}
+                            eccAssessment={eccAssessment}
+                            pdplAssessment={pdplAssessment}
+                            samaCsfAssessment={samaCsfAssessment}
+                            cmaAssessment={cmaAssessment}
+                            tasks={tasks}
+                            setTasks={setTasks}
+                            risks={risks}
+                        />
+                    )}
             {currentView === 'navigator' && (
                 <ContentView 
                     domain={selectedDomain}
@@ -602,8 +797,17 @@ export default function App() {
                     setRisks={setRisks}
                     status={assessmentStatuses.riskAssessment as any || 'idle'}
                     onInitiate={() => {
-                        setAssessmentStatuses(prev => ({...prev, riskAssessment: 'in-progress'}));
-                        dbAPI.updateAssessmentStatus(company.id, {...assessmentStatuses, riskAssessment: 'in-progress'});
+                        const currentStatus = assessmentStatuses.riskAssessment || 'idle';
+                        if (currentStatus === 'idle') {
+                            setAssessmentStatuses(prev => ({...prev, riskAssessment: 'in-progress'}));
+                            dbAPI.updateAssessmentStatus(company.id, {...assessmentStatuses, riskAssessment: 'in-progress'});
+                        } else {
+                            const rashid = virtualAgents.find(a => a.id === 'agent-rashid');
+                            if (rashid) {
+                                setActiveVirtualAgent(rashid);
+                                setShowLiveAssistant(true);
+                            }
+                        }
                     }}
                     onComplete={() => {
                         setAssessmentStatuses(prev => ({...prev, riskAssessment: 'idle'}));
@@ -626,6 +830,20 @@ export default function App() {
                     agentLog={agentLog}
                     permissions={permissions}
                     assessments={{ ecc: eccAssessment, pdpl: pdplAssessment, sama: samaCsfAssessment, cma: cmaAssessment }}
+                />
+            )}
+            {currentView === 'liveVoiceDemo' && (
+                <LiveVoiceDemoPage 
+                    company={company}
+                    users={users}
+                    documents={documents}
+                    assessments={{
+                        ecc: eccAssessment,
+                        pdpl: pdplAssessment,
+                        sama: samaCsfAssessment,
+                        cma: cmaAssessment,
+                        selectedFramework: Object.keys(assessmentStatuses).find(k => assessmentStatuses[k] === 'in-progress' || assessmentStatuses[k] === 'completed')
+                    }}
                 />
             )}
             {currentView === 'superAdmin' && <SuperAdminPage currentUser={currentUser} />}
@@ -659,28 +877,34 @@ export default function App() {
                     addAuditLog={handleAddAuditLog}
                 />
             )}
-            {currentView === 'virtualDepartment' && (
-                <VirtualDepartmentPage
-                    onDelegateTask={(agentName, task) => {
-                        const agent = ['Ahmed AI', 'Fahad AI', 'Mohammed AI', 'Ibrahim AI', 'Asaad AI', 'Abdullah AI'].find(n => n === agentName);
-                        if(agent) {
-                            // Update agent status in UI (mock)
-                            addNotification(`Task delegated to ${agentName}: ${task}`, 'success');
-                        }
-                    }}
-                    onConsultAgent={(agent) => {
-                        setActiveVirtualAgent(agent);
-                        setShowLiveAssistant(true);
-                    }}
-                    risks={risks}
-                    documents={documents}
-                    eccAssessment={eccAssessment}
-                    pdplAssessment={pdplAssessment}
-                    onAddDocument={(doc) => { setDocuments(p => [...p, doc]); dbAPI.saveDocument(company.id, doc); }}
-                    onAddRisk={(risk) => { setRisks(p => [...p, risk]); dbAPI.addRisk(company.id, risk); }}
-                    onAddAuditLog={handleAddAuditLog}
-                />
-            )}
+            {currentView === 'virtualMeeting' && <MeetingRoomPage />}
+            {currentView === 'whiteboard' && <MultiplayerWhiteboard />}
+            {currentView === 'breadcrumbDesign' && <BreadcrumbReferenceSheet />}
+            {currentView === 'accordionDesign' && <AccordionShowcase />}
+                    {currentView === 'virtualDepartment' && (
+                        <VirtualDepartmentPage
+                            onDelegateTask={(agentName, task) => {
+                                const agent = ['Ahmed AI', 'Fahad AI', 'Mohammed AI', 'Ibrahim AI', 'Asaad AI', 'Abdullah AI'].find(n => n === agentName);
+                                if(agent) {
+                                    // Update agent status in UI (mock)
+                                    addNotification(`Task delegated to ${agentName}: ${task}`, 'success');
+                                }
+                            }}
+                            onConsultAgent={(agent) => {
+                                setActiveVirtualAgent(agent);
+                                setShowLiveAssistant(true);
+                            }}
+                            risks={risks}
+                            documents={documents}
+                            eccAssessment={eccAssessment}
+                            pdplAssessment={pdplAssessment}
+                            onAddDocument={(doc) => { setDocuments(p => [...p, doc]); dbAPI.saveDocument(company.id, doc); }}
+                            onAddRisk={(risk) => { setRisks(p => [...p, risk]); dbAPI.addRisk(company.id, risk); }}
+                            onAddAuditLog={handleAddAuditLog}
+                        />
+                    )}
+                </div>
+            </div>
         </div>
 
         {/* Global Notifications */}
@@ -695,8 +919,10 @@ export default function App() {
         {/* Live Assistant Overlay */}
         <LiveAssistantWidget 
             isOpen={showLiveAssistant}
-            onToggle={() => { setShowLiveAssistant(false); setActiveVirtualAgent(null); }}
+            onToggle={() => { setShowLiveAssistant(false); setActiveVirtualAgent(null); setIsHeadlessMode(false); }}
             onNavigate={setCurrentView}
+            hidden={isHeadlessMode}
+            onStatusChange={setAssistantStatus}
             currentUser={currentUser}
             activeAgent={activeVirtualAgent}
             risks={risks}
@@ -741,5 +967,6 @@ export default function App() {
         {showMfaSetup && <MfaSetupPage user={currentUser} companyName={company.name} onVerified={handleMfaVerify} onCancel={() => setShowMfaSetup(false)} theme={theme} toggleTheme={() => {}} />}
       </main>
     </div>
+    </ErrorBoundary>
   );
 }

@@ -15,7 +15,7 @@ const FaqItem: React.FC<FaqItemProps> = ({ question, children }) => {
                 className="w-full flex justify-between items-center text-left text-gray-800 dark:text-gray-200"
                 aria-expanded={isOpen}
             >
-                <span className="font-semibold">{question}</span>
+                <span className="font-normal">{question}</span>
                 <ChevronDownIcon className={`w-5 h-5 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             {isOpen && (
@@ -35,23 +35,23 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onStartTour })
     return (
         <div className="max-w-4xl mx-auto space-y-12">
             <div>
-                <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Help & Support Center</h1>
+                <h1 className="text-xl font-normal text-gray-800 dark:text-gray-100 tracking-tight">Help & Support Center</h1>
                 <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Find answers to your questions and get in touch with our support team.</p>
             </div>
             
             <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Guided Tour</h2>
+                <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100 mb-4">Guided Tour</h2>
                 <p className="text-gray-700 dark:text-gray-300 mb-4">
                     New to the platform? Let our AI assistant give you a quick tour of the main features to get you started.
                 </p>
-                <button onClick={onStartTour} className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
+                <button onClick={onStartTour} className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
                     <GraduationCapIcon className="w-5 h-5" />
                     Start AI Guide Tour
                 </button>
             </div>
 
             <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Frequently Asked Questions</h2>
+                <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100 mb-4">Frequently Asked Questions</h2>
                 <div>
                     <FaqItem question="How do I start a new assessment?">
                         <p>Navigate to the desired assessment page (e.g., "NCA ECC Assessment"). If no assessment is in progress, you'll see a button to "Initiate New Assessment". Clicking this will reset any previous data for that assessment type and start a new one.</p>
@@ -70,7 +70,7 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onStartTour })
             
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Contact Support</h2>
+                    <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100 mb-4">Contact Support</h2>
                     <div className="space-y-3 text-gray-700 dark:text-gray-300">
                         <p>If you can't find the answer you're looking for, our support team is here to help.</p>
                         <p><strong>Email:</strong> <a href="mailto:support@metaworkss.com" className="text-teal-600 dark:text-teal-400 hover:underline">support@metaworkss.com</a></p>
@@ -80,10 +80,10 @@ export const HelpSupportPage: React.FC<HelpSupportPageProps> = ({ onStartTour })
                 </div>
 
                 <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Knowledge Base</h2>
+                    <h2 className="text-lg font-normal text-gray-900 dark:text-gray-100 mb-4">Knowledge Base</h2>
                     <div className="space-y-3 text-gray-700 dark:text-gray-300">
                         <p>For in-depth guides and tutorials on using the platform, please visit our comprehensive knowledge base.</p>
-                        <a href="#" className="inline-block mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
+                        <a href="#" className="inline-block mt-2 px-4 py-2 border border-transparent text-sm font-normal rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700">
                             Go to Knowledge Base
                         </a>
                     </div>
