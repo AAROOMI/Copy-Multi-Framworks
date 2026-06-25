@@ -18,8 +18,23 @@ export const LiveVoiceDemoPage: React.FC<LiveVoiceDemoPageProps> = ({ company, u
     const [prevMOM, setPrevMOM] = useState<any>(null);
     const [logs, setLogs] = useState<{ id: string; msg: string; type: 'system' | 'agent' | 'human' }[]>([]);
     const [activeSpeaker, setActiveSpeaker] = useState<{ name: string; role: string } | null>(null);
+    const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
     const recognitionRef = useRef<any>(null);
+    const meetingSessionIdRef = useRef<number>(0);
+
+    // Sync voices natively
+    useEffect(() => {
+        const loadVoices = () => {
+            if ('speechSynthesis' in window) {
+                setAvailableVoices(window.speechSynthesis.getVoices());
+            }
+        };
+        loadVoices();
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+    }, []);
 
     useEffect(() => {
         if ('webkitSpeechRecognition' in window) {
@@ -45,6 +60,10 @@ export const LiveVoiceDemoPage: React.FC<LiveVoiceDemoPageProps> = ({ company, u
     };
 
     const startListening = () => {
+        meetingSessionIdRef.current += 1;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
         setTranscript('');
         setDecision(null);
         setLogs([]);
@@ -56,6 +75,10 @@ export const LiveVoiceDemoPage: React.FC<LiveVoiceDemoPageProps> = ({ company, u
     };
 
     const handleProcessRequest = async (text: string) => {
+        meetingSessionIdRef.current += 1;
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
         setStatus('processing');
         addLog(`Voice Processing: "${text}"`, 'human');
         addLog("Activating GRC Orchestrator... Connecting stakeholders.", 'system');
@@ -81,40 +104,81 @@ export const LiveVoiceDemoPage: React.FC<LiveVoiceDemoPageProps> = ({ company, u
     const runMeetingVoices = async (result: OrchestratorDecision) => {
         setStatus('meeting');
         addLog("Meeting in progress in the GRC Boardroom.", 'system');
+        const currentSessionId = ++meetingSessionIdRef.current;
 
         // Play each agent's part sequentially
         for (const trace of result.agentTrace) {
+            if (meetingSessionIdRef.current !== currentSessionId) {
+                console.log("GRC Boardroom Interrupted - terminating speech thread.");
+                break;
+            }
             setActiveSpeaker({ name: trace.speakerName, role: trace.agentRole });
             addLog(`${trace.speakerName} (${trace.agentRole}): ${trace.reasoning}`, 'agent');
-            await speak(trace.reasoning, trace.agentRole);
+            await speak(trace.reasoning, trace.agentRole, currentSessionId);
         }
 
         // Final Orchestrator summary
-        setActiveSpeaker({ name: 'Orchestrator', role: 'Orchestrator' });
-        addLog(`Orchestrator: ${result.summary}`, 'agent');
-        await speak(result.summary, 'Orchestrator');
+        if (meetingSessionIdRef.current === currentSessionId) {
+            setActiveSpeaker({ name: 'Orchestrator', role: 'Orchestrator' });
+            addLog(`Orchestrator: ${result.summary}`, 'agent');
+            await speak(result.summary, 'Orchestrator', currentSessionId);
+        }
 
-        setActiveSpeaker(null);
-        setStatus('idle');
+        if (meetingSessionIdRef.current === currentSessionId) {
+            setActiveSpeaker(null);
+            setStatus('idle');
+        }
     };
 
-    const speak = (text: string, role: string) => {
+    const speak = (text: string, role: string, sessionId: number) => {
         return new Promise<void>((resolve) => {
-            if (!('speechSynthesis' in window)) {
+            if (!('speechSynthesis' in window) || meetingSessionIdRef.current !== sessionId) {
                 resolve();
                 return;
             }
 
+            // Always clear previous voice queue first to avoid talking lag
+            window.speechSynthesis.cancel();
+
             const utterance = new SpeechSynthesisUtterance(text);
+            const voicesList = availableVoices.length > 0 ? availableVoices : window.speechSynthesis.getVoices();
+
+            const getBestMaleVoice = () => {
+                const preferredKeywords = [
+                    'google us english male',
+                    'natural male',
+                    'premium male',
+                    'guy',
+                    'david',
+                    'mark',
+                    'george',
+                    'richard',
+                    'andrew',
+                    'microsoft david',
+                    'male'
+                ];
+                for (const keyword of preferredKeywords) {
+                    const voice = voicesList.find(v => v.name.toLowerCase().includes(keyword) && v.lang.toLowerCase().startsWith('en'));
+                    if (voice) return voice;
+                }
+                const anyMale = voicesList.find(v => (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('guy')) && v.lang.toLowerCase().startsWith('en'));
+                if (anyMale) return anyMale;
+                return voicesList.find(v => v.lang.toLowerCase().startsWith('en'));
+            };
+
+            const selectedVoice = getBestMaleVoice();
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
             
             // Assign different characteristics based on role
             switch (role) {
-                case 'CISO': utterance.pitch = 0.8; utterance.rate = 0.9; break;
-                case 'CIO': utterance.pitch = 1.1; utterance.rate = 1.0; break;
-                case 'DPO': utterance.pitch = 1.3; utterance.rate = 1.1; break;
-                case 'Auditor': utterance.pitch = 0.7; utterance.rate = 0.85; break;
-                case 'Compliance Officer': utterance.pitch = 1.0; utterance.rate = 1.1; break;
-                default: utterance.pitch = 1.0; utterance.rate = 1.0;
+                case 'CISO': utterance.pitch = 0.82; utterance.rate = 0.88; break;
+                case 'CIO': utterance.pitch = 1.0; utterance.rate = 0.92; break;
+                case 'DPO': utterance.pitch = 1.02; utterance.rate = 0.96; break;
+                case 'Auditor': utterance.pitch = 0.88; utterance.rate = 0.94; break;
+                case 'Compliance Officer': utterance.pitch = 0.96; utterance.rate = 0.94; break;
+                default: utterance.pitch = 0.95; utterance.rate = 0.95;
             }
 
             utterance.onend = () => resolve();

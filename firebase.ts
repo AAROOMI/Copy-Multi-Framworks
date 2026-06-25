@@ -3,19 +3,43 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDocFromServer } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-import firebaseConfig from './firebase-applet-config.json';
+import firebaseAppletConfig from "./firebase-applet-config.json";
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: firebaseAppletConfig.apiKey || "AIzaSyBY2XUA9lh47JrdPLUJq-D3hkCioDC9SIs",
+  authDomain: firebaseAppletConfig.authDomain || "gen-lang-client-0539526472.firebaseapp.com",
+  databaseURL: (firebaseAppletConfig as any).databaseURL || "https://gen-lang-client-0539526472-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: firebaseAppletConfig.projectId || "gen-lang-client-0539526472",
+  storageBucket: firebaseAppletConfig.storageBucket || "gen-lang-client-0539526472.firebasestorage.app",
+  messagingSenderId: firebaseAppletConfig.messagingSenderId || "442027961273",
+  appId: firebaseAppletConfig.appId || "1:442027961273:web:6a4b42e806933c92b96468",
+  measurementId: firebaseAppletConfig.measurementId || "G-J64Q0033C1",
+  firestoreDatabaseId: (firebaseAppletConfig as any).firestoreDatabaseId
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore and get a reference to the service
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = firebaseConfig.firestoreDatabaseId 
+  ? getFirestore(app, firebaseConfig.firestoreDatabaseId) 
+  : getFirestore(app);
 
 // Initialize Authentication
 export const auth = getAuth(app);
 
-// Initialize Analytics
-export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+// Initialize Analytics safely
+let analyticsInstance = null;
+if (typeof window !== 'undefined') {
+  try {
+    analyticsInstance = getAnalytics(app);
+  } catch (error) {
+    console.warn("Firebase Analytics is not supported in this environment:", error);
+  }
+}
+export const analytics = analyticsInstance;
 
 export { firebaseConfig };
 

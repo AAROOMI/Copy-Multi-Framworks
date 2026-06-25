@@ -17,6 +17,8 @@
     "@clerk/clerk-react": "5",
     "@google/genai": "^1.16.0",
     "@metamask/detect-provider": "^2.0.0",
+    "@mlc-ai/web-llm": "^0.2.84",
+    "d3": "^7.9.0",
     "firebase": "^12.6.0",
     "lucide-react": "^1.14.0",
     "motion": "^12.38.0",
@@ -25,6 +27,7 @@
     "recharts": "^3.8.1"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.3",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^9.2.1",

@@ -83,34 +83,72 @@ const SignInView: React.FC<Omit<LoginPageProps, 'theme' | 'toggleTheme' | 'onSet
         setIsLoading(false);
     };
 
+    const [authMode, setAuthMode] = useState<'tenant' | 'superAdmin'>('tenant');
+
+    const handleModeSwitch = (mode: 'tenant' | 'superAdmin') => {
+        setAuthMode(mode);
+        if (mode === 'superAdmin') {
+            setEmail('aaroomi@gmail.com');
+            setPassword('M@stermind2878');
+        } else {
+            setEmail('admin@demo.com');
+            setPassword('demo123');
+        }
+    };
+
     return (
         <form className="space-y-5" onSubmit={handleSubmit}>
+            {/* Super Admin Login Mode Toggler */}
+            <div className="flex rounded-lg bg-white/5 p-1 border border-white/5">
+                <button
+                    type="button"
+                    onClick={() => handleModeSwitch('tenant')}
+                    className={`flex-1 py-1.5 px-3 rounded-md text-[11px] font-normal tracking-wide transition-all uppercase ${authMode === 'tenant' ? 'bg-teal-500/10 text-teal-400 border border-teal-500/20' : 'text-slate-400 hover:text-white'}`}
+                >
+                    Enterprise Node
+                </button>
+                <button
+                    type="button"
+                    onClick={() => handleModeSwitch('superAdmin')}
+                    className={`flex-1 py-1.5 px-3 rounded-md text-[11px] font-normal tracking-wide transition-all uppercase ${authMode === 'superAdmin' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'text-slate-400 hover:text-white'}`}
+                >
+                    Super Admin Console
+                </button>
+            </div>
+
             <div>
-                <label htmlFor="email" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
-                    Enterprise ID / Email
+                <label htmlFor="email" className="block text-[11px] font-medium text-slate-400 uppercase tracking-widest mb-2 px-1">
+                    {authMode === 'superAdmin' ? 'Super Admin Identifier' : 'Enterprise ID / Email'}
                 </label>
                 <div className="mt-1">
                     <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                        className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all" 
-                        placeholder="aaroomi@gmail.com" />
+                        className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all font-normal" 
+                        placeholder={authMode === 'superAdmin' ? 'aaroomi@gmail.com' : 'admin@demo.com'} />
                 </div>
             </div>
             <div>
-                <label htmlFor="password" className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
-                    Access Token / Password
+                <label htmlFor="password" className="block text-[11px] font-medium text-slate-400 uppercase tracking-widest mb-2 px-1">
+                    {authMode === 'superAdmin' ? 'Super Admin Password' : 'Access Token / Password'}
                 </label>
                 <div className="mt-1 relative">
                     <input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                        className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all" 
+                        className="appearance-none block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl shadow-inner placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500/50 text-[13px] text-white transition-all font-normal" 
                         placeholder="••••••••" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors">
                         {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                     </button>
                 </div>
             </div>
-             <div className="flex items-center justify-end">
+             <div className="flex items-center justify-between">
+                <div>
+                    {authMode === 'superAdmin' && (
+                        <span className="text-[10px] text-red-400 font-normal tracking-wide uppercase">
+                            Admin Gateway Authorized
+                        </span>
+                    )}
+                </div>
                 <div className="text-sm">
-                    <button type="button" onClick={() => setView('forgotPassword')} className="text-[11px] font-medium text-teal-400 hover:text-teal-300 transition-colors">
+                    <button type="button" onClick={() => setView('forgotPassword')} className="text-[11px] font-medium text-teal-400 hover:text-teal-300 transition-colors bg-transparent border-0 outline-none cursor-pointer">
                         Recovery Terminal
                     </button>
                 </div>
@@ -135,12 +173,12 @@ const SignInView: React.FC<Omit<LoginPageProps, 'theme' | 'toggleTheme' | 'onSet
                 <button 
                     type="submit" 
                     disabled={isLoading} 
-                    className="relative w-full flex justify-center py-3.5 px-4 bg-[#0F172A] border border-white/10 rounded-xl shadow-2xl text-[13px] font-bold text-white uppercase tracking-widest hover:border-white/20 transition-all disabled:opacity-50"
+                    className="relative w-full flex justify-center py-3.5 px-4 bg-[#0F172A] border border-white/10 rounded-xl shadow-2xl text-[13px] font-medium text-white uppercase tracking-widest hover:border-white/20 transition-all disabled:opacity-50"
                 >
                     {isLoading ? <div className="flex items-center gap-3">
                         <svg className="animate-spin h-5 w-5 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         <span>Authenticating...</span>
-                    </div> : "Secure Sign-In"}
+                    </div> : (authMode === 'superAdmin' ? "Secure Admin Access Port" : "Secure Sign-In")}
                 </button>
             </div>
 
@@ -148,7 +186,7 @@ const SignInView: React.FC<Omit<LoginPageProps, 'theme' | 'toggleTheme' | 'onSet
                 <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-white/5" />
                 </div>
-                <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-bold">
+                <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-normal">
                     <span className="px-3 bg-[#0F172A] text-slate-500">Multimodal Auth</span>
                 </div>
             </div>
@@ -158,7 +196,7 @@ const SignInView: React.FC<Omit<LoginPageProps, 'theme' | 'toggleTheme' | 'onSet
                     type="button" 
                     onClick={handleGoogleLogin}
                     disabled={isLoading}
-                    className="w-full flex justify-center items-center py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl shadow-lg text-[11px] font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all"
+                    className="w-full flex justify-center items-center py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl shadow-lg text-[11px] font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all"
                 >
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-4 h-4 mr-2" />
                     Google SSO
@@ -167,7 +205,7 @@ const SignInView: React.FC<Omit<LoginPageProps, 'theme' | 'toggleTheme' | 'onSet
                     type="button" 
                     onClick={handleMetaMaskLogin}
                     disabled={isLoading} 
-                    className="w-full flex justify-center items-center py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl shadow-lg text-[11px] font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all"
+                    className="w-full flex justify-center items-center py-2.5 px-4 bg-white/5 border border-white/10 rounded-xl shadow-lg text-[11px] font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-all font-normal"
                 >
                     <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Monkey_Face.svg" alt="MetaMask" className="w-4 h-4 mr-2" />
                     Web3 Wallet
@@ -177,13 +215,13 @@ const SignInView: React.FC<Omit<LoginPageProps, 'theme' | 'toggleTheme' | 'onSet
                 <button 
                     type="button" 
                     onClick={() => onLogin('admin@demo.com', 'demo123')}
-                    className="text-[10px] font-bold text-slate-500 hover:text-teal-400 uppercase tracking-widest transition-colors"
+                    className="text-[10px] font-normal text-slate-500 hover:text-teal-400 uppercase tracking-widest transition-colors font-normal"
                 >
                     Bypass to Demo Sandbox
                 </button>
                 <div className="flex items-center gap-2 px-3 py-1 bg-teal-500/10 border border-teal-500/20 rounded-full">
                     <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></div>
-                    <span className="text-[9px] font-bold text-teal-400 uppercase tracking-widest">Edge-AI Assessment Mode Active</span>
+                    <span className="text-[9px] font-normal text-teal-400 uppercase tracking-widest">Edge-AI Assessment Mode Active</span>
                 </div>
             </div>
         </form>
@@ -381,10 +419,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onMetaMaskLogin, 
                         <LogoIcon className="h-12 w-auto text-white" />
                     </div>
                 </motion.div>
-                <h2 className="text-center text-[10px] font-bold text-teal-400 uppercase tracking-[0.4em] mb-2">
+                <h2 className="text-center text-[10px] font-normal text-teal-400 uppercase tracking-[0.4em] mb-2">
                     ECC COMPLIANCE ORCHESTRATOR
                 </h2>
-                <h1 className="text-center text-2xl font-bold text-white tracking-tight">
+                <h1 className="text-center text-lg font-normal text-white tracking-tight">
                     {viewTitles[view]}
                 </h1>
             </div>

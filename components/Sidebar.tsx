@@ -1,11 +1,14 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { DocumentIcon, UsersIcon, BuildingOfficeIcon, DashboardIcon, ClipboardListIcon, BeakerIcon, ClipboardCheckIcon, ShieldKeyholeIcon, LandmarkIcon, IdentificationIcon, QuestionMarkCircleIcon, GraduationCapIcon, ExclamationTriangleIcon, LineChartIcon, SparklesIcon, ShieldCheckIcon, ChatBotIcon, SunIcon, MoonIcon, LinkIcon, BugAntIcon, UserGroupIcon, PhoneIcon, LayoutIcon } from './Icons';
+import { DocumentIcon, UsersIcon, BuildingOfficeIcon, DashboardIcon, ClipboardListIcon, BeakerIcon, ClipboardCheckIcon, ShieldKeyholeIcon, LandmarkIcon, IdentificationIcon, QuestionMarkCircleIcon, GraduationCapIcon, ExclamationTriangleIcon, LineChartIcon, SparklesIcon, ShieldCheckIcon, ChatBotIcon, SunIcon, MoonIcon, LinkIcon, BugAntIcon, UserGroupIcon, PhoneIcon, LayoutIcon, CpuIcon } from './Icons';
 import type { Domain, Permission, View, UserTrainingProgress } from '../types';
 import { virtualAgents } from '../data/virtualAgents';
 import { trainingCourses } from '../data/trainingData';
-const sarahJohnsonImg = "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0539526472.firebasestorage.app/o/sara.jpg?alt=media";
+import { translations } from '../translations';
+// @ts-ignore
+import saraImg from '../src/assets/images/sarah_johnson_new_profile_1777360271368.png';
+const sarahJohnsonImg = saraImg;
 
 interface SidebarProps {
   domains: Domain[];
@@ -15,11 +18,36 @@ interface SidebarProps {
   onSetView: (view: View) => void;
   permissions: Set<Permission>;
   trainingProgress?: UserTrainingProgress;
+  language?: 'en' | 'ar';
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSelectDomain, currentView, onSetView, permissions, trainingProgress }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSelectDomain: parentOnSelectDomain, currentView, onSetView: parentOnSetView, permissions, trainingProgress, language = 'en', isOpen = false, onClose }) => {
+  const t = translations[language];
+
+  const onSetView = (view: View) => {
+    parentOnSetView(view);
+    if (onClose) onClose();
+  };
+
+  const onSelectDomain = (domain: Domain) => {
+    parentOnSelectDomain(domain);
+    if (onClose) onClose();
+  };
+
   return (
-    <aside className="w-72 glass-panel m-4 mr-0 border-white/5 shadow-2xl overflow-hidden hidden md:flex md:flex-col h-[calc(100%-2rem)]">
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+      <aside className={`w-72 glass-panel m-4 mr-0 border-white/5 shadow-2xl overflow-hidden h-[calc(100%-2rem)] md:flex md:flex-col ${
+        isOpen ? 'fixed inset-y-0 left-0 z-50 flex flex-col bg-[#0F0F1A]/95' : 'hidden md:flex'
+      }`}>
       <nav className="flex-grow overflow-y-auto scrollbar-hide p-4">
         <ul>
           {/* Sara - AI Agent Profile */}
@@ -54,7 +82,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                         {/* Sara image from Storage as requested */}
                         <img 
                             src={sarahJohnsonImg} 
-                            alt="Sarah Johnson Professional Consultant" 
+                            alt="Sara Professional Consultant" 
                             className="w-full h-full object-cover"
                         />
                     </div>
@@ -64,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                 </div>
                 
                 <div className="text-center z-10">
-                  <span className="block font-medium text-white/90 text-[14px] leading-tight mb-1">Sarah Johnson</span>
+                  <span className="block font-medium text-white/90 text-[14px] leading-tight mb-1">Sara</span>
                   <div className="flex items-center justify-center gap-1">
                       <SparklesIcon className="w-3 h-3 text-purple-400" />
                       <span className="text-[10px] text-slate-400 font-normal uppercase tracking-wider">Virtual Consultant</span>
@@ -85,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <DashboardIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'dashboard' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span className="relative z-10">Dashboard</span>
+                  <span className="relative z-10 font-normal">{t.dashboard}</span>
                 </button>
             </li>
           )}
@@ -94,7 +122,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
           {permissions.has('virtualDept:manage') && (
             <li className="mt-6 mb-4">
                <div className="px-3 mb-2 flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Virtual GRC Dept</span>
+                  <span className="text-[10px] font-normal text-slate-500 uppercase tracking-[0.2em]">{language === 'ar' ? 'إدارة مجلس الحوكمة الافتراضي' : 'Virtual GRC Dept'}</span>
                </div>
                <button
                   onClick={() => onSetView('virtualDepartment')}
@@ -118,9 +146,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                     />
                   )}
                   <UserGroupIcon className={`w-5 h-5 mr-3 transition-colors relative z-10 ${currentView === 'virtualDepartment' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span className="relative z-10">Department Overview</span>
+                  <span className="relative z-10 font-normal">{t.virtualDepartment}</span>
                 </button>
-                <button
+               <button
                   onClick={() => onSetView('virtualMeeting')}
                   className={`w-full text-left p-3 rounded-md text-[13px] transition-all duration-300 flex items-center mb-1 group relative overflow-hidden ${
                     currentView === 'virtualMeeting'
@@ -142,9 +170,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                     />
                   )}
                   <PhoneIcon className={`w-5 h-5 mr-3 transition-colors relative z-10 ${currentView === 'virtualMeeting' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span className="relative z-10">Board Meeting Room</span>
+                  <span className="relative z-10 font-normal">{t.virtualMeeting}</span>
                 </button>
-                <button
+               <button
                   onClick={() => onSetView('whiteboard')}
                   className={`w-full text-left p-3 rounded-md text-[13px] transition-all duration-300 flex items-center mb-1 group relative overflow-hidden ${
                     currentView === 'whiteboard'
@@ -166,8 +194,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                     />
                   )}
                   <LayoutIcon className={`w-5 h-5 mr-3 transition-colors relative z-10 ${currentView === 'whiteboard' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span className="relative z-10">Collab Workspace</span>
+                  <span className="relative z-10 font-normal">{t.whiteboard}</span>
                 </button>
+               <button
+                  onClick={() => onSetView('creatorMarketplace')}
+                  className={`w-full text-left p-3 rounded-md text-[13px] transition-all duration-300 flex items-center mb-1 group relative overflow-hidden ${
+                    currentView === 'creatorMarketplace'
+                      ? 'bg-white/10 text-white font-medium border border-white/10 shadow-lg shadow-amber-500/5'
+                      : 'text-slate-400 hover:text-white/80 hover:bg-white/5'
+                  }`}
+                >
+                  {currentView === 'creatorMarketplace' && (
+                    <motion.div
+                      className="absolute inset-0 z-0 pointer-events-none opacity-20"
+                      initial={{ backgroundPosition: '0% 0%' }}
+                      animate={{ backgroundPosition: ['0% 0%', '200% 200%'] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                      style={{
+                        backgroundImage: 'linear-gradient(135deg, transparent 0%, #F59E0B 20%, #FBBF24 40%, #F59E0B 60%, #D97706 80%, #FBBF24 100%)',
+                        backgroundSize: '200% 200%',
+                        mixBlendMode: 'overlay'
+                      }}
+                    />
+                  )}
+                  <UsersIcon className={`w-5 h-5 mr-3 transition-colors relative z-10 ${currentView === 'creatorMarketplace' ? 'text-amber-400' : 'group-hover:text-amber-400/70'}`} />
+                  <span className="relative z-10 font-normal">{t.creatorMarketplace}</span>
+                </button>
+
                 <div className="pl-3 space-y-2 mt-2">
                     {virtualAgents.map(agent => (
                         <div key={agent.id} className="flex items-center gap-2 px-2 py-1 hover:bg-white/5 rounded-md cursor-pointer transition-colors" onClick={() => onSetView('virtualDepartment')}>
@@ -196,7 +249,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <UsersIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'userManagement' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>User Management</span>
+                  <span className="font-normal">{t.userManagement}</span>
                 </button>
             </li>
           )}
@@ -211,7 +264,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <BuildingOfficeIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'companyProfile' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>Company Profile</span>
+                  <span className="font-normal">{t.companyProfile}</span>
                 </button>
             </li>
           )}
@@ -226,7 +279,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <IdentificationIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'userProfile' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>My Profile</span>
+                  <span className="font-normal">{t.myProfile}</span>
                 </button>
             </li>
           )}
@@ -241,7 +294,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <ShieldCheckIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'assets' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>Asset Inventory</span>
+                  <span className="font-normal">{t.assetInventory}</span>
                 </button>
             </li>
           )}
@@ -256,7 +309,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <LinkIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'integrations' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>Enterprise Integrations</span>
+                  <span className="font-normal">{t.integrations}</span>
                 </button>
             </li>
           )}
@@ -271,7 +324,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <BugAntIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'vapt' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>VAPT Orchestrator</span>
+                  <span className="font-normal">{t.vaptOrchestrator}</span>
                 </button>
             </li>
           )}
@@ -287,7 +340,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <DocumentIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'documents' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>Document Management</span>
+                  <span className="font-normal">{t.documents}</span>
                 </button>
             </li>
           )}
@@ -349,7 +402,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <ExclamationTriangleIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'riskAssessment' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>Risk Assessment</span>
+                  <span className="font-normal">{t.riskAssessment}</span>
                 </button>
             </li>
           )}
@@ -365,7 +418,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <ClipboardCheckIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'assessment' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>NCA ECC Assessment</span>
+                  <span className="font-normal">{t.eccAssessment}</span>
                 </button>
             </li>
           )}
@@ -380,7 +433,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <ShieldKeyholeIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'pdplAssessment' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>PDPL Assessment</span>
+                  <span className="font-normal">{t.pdplAssessment}</span>
                 </button>
             </li>
           )}
@@ -395,7 +448,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <LandmarkIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'samaCsfAssessment' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>SAMA CSF Assessment</span>
+                  <span className="font-normal">{t.samaAssessment}</span>
                 </button>
             </li>
           )}
@@ -410,7 +463,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <LineChartIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'cmaAssessment' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>CMA Assessment</span>
+                  <span className="font-normal">{t.cmaAssessment}</span>
                 </button>
             </li>
           )}
@@ -425,7 +478,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <ClipboardListIcon className="w-5 h-5 mr-3" />
-                  <span>Audit Log</span>
+                  <span className="font-normal">{t.auditLog}</span>
                 </button>
             </li>
           )}
@@ -440,7 +493,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <PhoneIcon className="w-5 h-5 mr-3 text-teal-500" />
-                  <span>Live Voice Demo</span>
+                  <span className="font-normal">{language === 'ar' ? 'تجربة الصوت الحي' : 'Live Voice Demo'}</span>
                 </button>
             </li>
           )}
@@ -455,12 +508,38 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <SparklesIcon className="w-5 h-5 mr-3" />
-                  <span>Compliance Agent</span>
+                  <span className="font-normal">{language === 'ar' ? 'وكيل الامتثال الذكي' : 'Compliance Agent'}</span>
                 </button>
             </li>
           )}
+          <li className="mt-2">
+            <button
+                onClick={() => onSetView('gemmaEngine')}
+                className={`w-full text-left p-3 rounded-md text-sm transition-colors duration-200 flex items-center ${
+                  currentView === 'gemmaEngine'
+                    ? 'bg-cyan-50 dark:bg-cyan-900/50 text-cyan-700 dark:text-cyan-300 font-normal'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                <CpuIcon className="w-5 h-5 mr-3 text-cyan-500" />
+                <span className="font-normal">{language === 'ar' ? 'محرك جينما 4 المحلي' : 'Gemma 4 Local AI'}</span>
+              </button>
+          </li>
+          <li className="mt-2">
+            <button
+                onClick={() => onSetView('superTestAgent')}
+                className={`w-full text-left p-3 rounded-md text-sm transition-colors duration-200 flex items-center ${
+                  currentView === 'superTestAgent'
+                    ? 'bg-purple-50 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-normal'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                <BeakerIcon className="w-5 h-5 mr-3 text-purple-500" />
+                <span className="font-normal">{language === 'ar' ? 'العميل الفائق للاختبار' : 'Super Test Agent'}</span>
+              </button>
+          </li>
           {/* Super Admin Button */}
-          {permissions.has('users:create') && (
+          {permissions.has('superAdmin:read') && (
             <li className="mt-2">
               <button
                   onClick={() => onSetView('superAdmin')}
@@ -471,7 +550,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <BuildingOfficeIcon className="w-5 h-5 mr-3 text-red-600" />
-                  <span>Super Admin</span>
+                  <span className="font-normal">{language === 'ar' ? 'مشرف النظام' : 'Super Admin'}</span>
                 </button>
             </li>
           )}
@@ -486,7 +565,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
                   }`}
                 >
                   <QuestionMarkCircleIcon className={`w-5 h-5 mr-3 transition-colors ${currentView === 'help' ? 'text-cyan-400' : 'group-hover:text-cyan-400/70'}`} />
-                  <span>System Support</span>
+                  <span className="font-normal">{language === 'ar' ? 'الدعم الفني للنظام' : 'System Support'}</span>
                 </button>
             </li>
           )}
@@ -585,5 +664,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ domains, selectedDomain, onSel
         </div>
       )}
     </aside>
+    </>
   );
 };

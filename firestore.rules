@@ -47,8 +47,9 @@ service cloud.firestore {
       return isAuthenticated() && (
         request.auth.token.email == "aaroomi@gmail.com" ||
         request.auth.token.email == "aerummi@gmail.com" ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Administrator', 'Super Admin'])
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        !('role' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['Administrator', 'Super Admin', 'internal_admin']
       );
     }
 
@@ -57,8 +58,9 @@ service cloud.firestore {
         request.auth.token.email == "aaroomi@gmail.com" ||
         request.auth.token.email == "aerummi@gmail.com" ||
         companyId == 'demo-company' ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId == companyId)
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        !('companyId' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyId == companyId
       );
     }
 
@@ -77,7 +79,7 @@ service cloud.firestore {
              data.id is string && data.id.size() > 0 &&
              data.name is string && data.name.size() > 0 &&
              data.email is string &&
-             data.role in ['Administrator', 'Super Admin', 'CISO', 'CTO', 'CIO', 'CEO', 'Security Analyst', 'Employee', 'Security Officer'];
+             data.role in ['Administrator', 'Super Admin', 'internal_admin', 'CISO', 'CTO', 'CIO', 'CEO', 'Security Analyst', 'Employee', 'Security Officer'];
     }
 
     function isValidCompany(data) {

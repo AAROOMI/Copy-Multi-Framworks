@@ -1,45 +1,17 @@
 
-const CACHE_NAME = 'cybernav-v6';
+const CACHE_NAME = 'cybernav-v50';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
   '/logo.svg',
-  '/index.tsx',
-  '/App.tsx',
-  '/types.ts',
-  '/data/controls.ts',
-  '/data/templates.ts',
-  '/data/trainingData.ts',
-  '/components/AuditLogPage.tsx',
-  '/components/CompanyProfilePage.tsx',
-  '/components/CompanySetupPage.tsx',
-  '/components/ContentView.tsx',
-  '/components/ContentViewSkeleton.tsx',
-  '/components/Dashboard.tsx',
-  '/components/DocumentsPage.tsx',
-  '/components/Icons.tsx',
-  '/components/LoginPage.tsx',
-  '/components/Sidebar.tsx',
-  '/components/SubdomainAccordion.tsx',
-  '/components/UserManagementPage.tsx',
-  '/components/AssessmentSheet.tsx',
-  '/components/HelpSupportPage.tsx',
-  '/components/TrainingPage.tsx',
-  '/components/CourseDetailPage.tsx',
-  '/components/LessonPlayer.tsx',
-  '/components/LiveAssistantWidget.tsx',
-  '/components/NooraAssistant.tsx',
-  '/components/ComplianceAgentPage.tsx',
-  '/components/DidEmbed.tsx', 
+  '/manifest.json',
   'https://cdn.tailwindcss.com',
   'https://rsms.me/inter/inter.css',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js',
-  'https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js',
+  'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
   'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
-  'https://unpkg.com/html-to-docx-ts@1.8.0/dist/browser/html-to-docx.js',
-  'https://aistudiocdn.com/react@^19.1.1',
-  'https://aistudiocdn.com/react-dom@^19.1.1/client',
-  'https://aistudiocdn.com/@google/genai@^1.16.0'
+  'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+  'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js'
 ];
 
 self.addEventListener('install', event => {
@@ -48,7 +20,12 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache and caching assets');
-        const requests = URLS_TO_CACHE.map(url => new Request(url, { cache: 'reload' }));
+        const requests = URLS_TO_CACHE.map(url => {
+          if (url.startsWith('http')) {
+            return new Request(url, { cache: 'reload', mode: 'cors' });
+          }
+          return new Request(url, { cache: 'reload' });
+        });
         return cache.addAll(requests);
       })
       .catch(err => {

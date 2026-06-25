@@ -77,6 +77,7 @@ export type AuditAction =
   | 'DOCUMENT_GENERATED'
   | 'DOCUMENT_APPROVED'
   | 'DOCUMENT_REJECTED'
+  | 'DOCUMENT_UPDATED'
   | 'COMPANY_PROFILE_UPDATED'
   | 'COMPANY_CREATED'
   | 'PASSWORD_RESET_REQUESTED'
@@ -109,7 +110,7 @@ export interface AuditLogEntry {
 
 // --- NEW/UPDATED: User Management and RBAC System ---
 
-export type UserRole = 'Super Admin' | 'Administrator' | 'CISO' | 'CTO' | 'CIO' | 'CEO' | 'Security Analyst' | 'Employee';
+export type UserRole = 'Super Admin' | 'internal_admin' | 'Administrator' | 'CISO' | 'CTO' | 'CIO' | 'CEO' | 'Security Analyst' | 'Employee';
 
 export type Permission =
   | 'superAdmin:read'
@@ -158,6 +159,7 @@ export interface User {
   email: string;
   role: UserRole;
   isVerified: boolean;
+  isSuperUser?: boolean;
   accessExpiresAt?: number;
   password?: string;
   mfaEnabled?: boolean;
@@ -168,6 +170,42 @@ export interface User {
 }
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
+  internal_admin: [
+    'superAdmin:read',
+    'dashboard:read',
+    'users:read',
+    'users:create',
+    'users:update',
+    'users:delete',
+    'documents:read',
+    'documents:approve',
+    'documents:generate',
+    'templates:read',
+    'templates:apply',
+    'navigator:read',
+    'company:read',
+    'company:update',
+    'audit:read',
+    'assessment:read',
+    'assessment:update',
+    'pdplAssessment:read',
+    'pdplAssessment:update',
+    'samaCsfAssessment:read',
+    'samaCsfAssessment:update',
+    'cmaAssessment:read',
+    'cmaAssessment:update',
+    'userProfile:read',
+    'userProfile:update',
+    'help:read',
+    'training:read',
+    'riskAssessment:read',
+    'riskAssessment:update',
+    'complianceAgent:run',
+    'integrations:manage',
+    'vapt:manage',
+    'virtualDept:manage',
+    'assets:read', 'assets:create', 'assets:update', 'assets:delete'
+  ],
   'Super Admin': [
     'superAdmin:read',
     'dashboard:read',
@@ -738,6 +776,9 @@ export type View =
   | 'breadcrumbDesign'
   | 'accordionDesign'
   | 'whiteboard'
+  | 'creatorMarketplace'
+  | 'gemmaEngine'
+  | 'superTestAgent'
   | 'liveVoiceDemo'; 
 
 export interface LiveAssistantProps {

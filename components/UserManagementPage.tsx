@@ -356,6 +356,9 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Access Status</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">Expires On</th>
+                                    {(currentUser.role === 'internal_admin' || currentUser.role === 'Super Admin' || currentUser.email === 'aaroomi@gmail.com') && (
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-normal text-gray-500 dark:text-gray-300 uppercase tracking-wider">SuperUser Toggle</th>
+                                    )}
                                     {canPerformActions && (
                                         <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                                     )}
@@ -386,6 +389,29 @@ export const UserManagementPage: React.FC<UserManagementPageProps> = ({
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                             {user.accessExpiresAt ? new Date(user.accessExpiresAt).toLocaleDateString() : 'Permanent'}
                                         </td>
+                                        {(currentUser.role === 'internal_admin' || currentUser.role === 'Super Admin' || currentUser.email === 'aaroomi@gmail.com') && (
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <label className="inline-flex items-center cursor-pointer select-none">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={!!user.isSuperUser} 
+                                                        onChange={async () => {
+                                                            const updatedUser = { ...user, isSuperUser: !user.isSuperUser };
+                                                            try {
+                                                                await onUserUpdate(updatedUser);
+                                                                setUsers(prevUsers => prevUsers.map(u => u.id === user.id ? updatedUser : u));
+                                                                addNotification(`SuperUser status updated for ${user.name}`, 'success');
+                                                                addAuditLog('USER_UPDATED', `Toggled SuperUser bypass for ${user.name} (${user.email}) to ${!user.isSuperUser}`, user.id);
+                                                            } catch (e) {
+                                                                addNotification("Failed to toggle SuperUser status", "info");
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 text-teal-600 bg-gray-150 border-gray-350 dark:border-gray-600 rounded focus:ring-teal-500 focus:ring-1" 
+                                                    />
+                                                    <span className="ml-2 text-xs text-gray-600 dark:text-gray-400 font-normal">SuperUser</span>
+                                                </label>
+                                            </td>
+                                        )}
                                         {canPerformActions && (
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-normal space-x-2">
                                                 {canUpdate && <button onClick={() => handleEdit(user)} className="text-teal-600 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-200">{isExpired ? 'Re-activate' : 'Edit'}</button>}

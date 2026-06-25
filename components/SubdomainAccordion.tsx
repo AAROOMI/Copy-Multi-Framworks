@@ -14,10 +14,11 @@ interface ControlDetailProps {
   onGeneratePolicyWithAI?: (control: Control, subdomain: Subdomain, domain: Domain, tone: PolicyTone, length: PolicyLength) => Promise<void>;
   documentRepository: PolicyDocument[];
   permissions: Set<Permission>;
+  onUpdateDocument?: (doc: PolicyDocument) => void;
 }
 
 const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
-  ({ control, isActive, domain, subdomain, onAddDocument, onGeneratePolicyWithAI, documentRepository, permissions }, ref) => {
+  ({ control, isActive, domain, subdomain, onAddDocument, onGeneratePolicyWithAI, documentRepository, permissions, onUpdateDocument }, ref) => {
     const [copiedSection, setCopiedSection] = useState<string | null>(null);
     const [isHistoryVisible, setIsHistoryVisible] = useState(false);
     const [showGenSettings, setShowGenSettings] = useState(false);
@@ -25,6 +26,14 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
     const [selectedLength, setSelectedLength] = useState<PolicyLength>('Standard');
     const [isGenerating, setIsGenerating] = useState(false);
     
+    // Editor and Autosave state
+    const [isEditingDocument, setIsEditingDocument] = useState(false);
+    const [editPolicy, setEditPolicy] = useState('');
+    const [editProcedure, setEditProcedure] = useState('');
+    const [editGuideline, setEditGuideline] = useState('');
+    const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+    const [hasAutosavedSession, setHasAutosavedSession] = useState(false);
+
     // Audit State
     const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
     
@@ -82,8 +91,94 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
         }
     };
     
+    // Sync initial edit form state when editing is triggered or document is loaded/regenerated
+    useEffect(() => {
+      if (existingDoc && !isEditingDocument) {
+        setEditPolicy(existingDoc.content?.policy || '');
+        setEditProcedure(existingDoc.content?.procedure || '');
+        setEditGuideline(existingDoc.content?.guideline || '');
+      }
+    }, [existingDoc, isEditingDocument]);
+
+    // Check for existing auto-save on load
+    useEffect(() => {
+      if (control.id) {
+        const saved = localStorage.getItem(`grc_autosave_${control.id}`);
+        if (saved) {
+          setHasAutosavedSession(true);
+        }
+      }
+    }, [control.id]);
+
+    // Autosave loop every 30 seconds
+    useEffect(() => {
+      if (!isEditingDocument || !control.id) return;
+
+      const interval = setInterval(() => {
+        const payload = {
+          policy: editPolicy,
+          procedure: editProcedure,
+          guideline: editGuideline,
+          timestamp: Date.now()
+        };
+        localStorage.setItem(`grc_autosave_${control.id}`, JSON.stringify(payload));
+        
+        const now = new Date();
+        setLastSavedTime(now.toLocaleTimeString());
+      }, 30000); // 30 seconds
+
+      return () => clearInterval(interval);
+    }, [isEditingDocument, editPolicy, editProcedure, editGuideline, control.id]);
+
+    const handleLoadAutosave = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const saved = localStorage.getItem(`grc_autosave_${control.id}`);
+      if (saved) {
+        try {
+          const payload = JSON.parse(saved);
+          setEditPolicy(payload.policy || '');
+          setEditProcedure(payload.procedure || '');
+          setEditGuideline(payload.guideline || '');
+          setHasAutosavedSession(false);
+          setIsEditingDocument(true);
+        } catch (e) {
+          console.error("Failed to parse autosave payload", e);
+        }
+      }
+    };
+
+    const handleDiscardAutosave = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      localStorage.removeItem(`grc_autosave_${control.id}`);
+      setHasAutosavedSession(false);
+    };
+
+    const handleSaveDocument = (e?: React.MouseEvent) => {
+      if (e) e.stopPropagation();
+      if (!existingDoc) return;
+      const updatedDoc: PolicyDocument = {
+        ...existingDoc,
+        content: {
+          policy: editPolicy,
+          procedure: editProcedure,
+          guideline: editGuideline
+        },
+        updatedAt: new Date().toISOString()
+      };
+      if (onUpdateDocument) {
+        onUpdateDocument(updatedDoc);
+      }
+      localStorage.removeItem(`grc_autosave_${control.id}`);
+      setHasAutosavedSession(false);
+      setIsEditingDocument(false);
+      setLastSavedTime(null);
+    };
+
     const handleUpdateDocument = (updatedDoc: PolicyDocument) => {
          console.log("Document Signed:", updatedDoc);
+         if (onUpdateDocument) {
+             onUpdateDocument(updatedDoc);
+         }
          setIsAuditModalOpen(false);
     };
     
@@ -246,6 +341,161 @@ const ControlDetail = React.forwardRef<HTMLDivElement, ControlDetailProps>(
                 </ul>
             </div>
         </div>
+
+        {existingDoc && (
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-4">
+              <div 
+                className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-teal-50/50 dark:bg-teal-950/20 p-4 rounded-lg border border-teal-100/50 dark:border-teal-900/30 gap-3" 
+                onClick={(e) => e.stopPropagation()}
+              >
+                  <div className="space-y-0.5">
+                      <h5 className="text-sm font-normal text-teal-800 dark:text-teal-400 font-mono">Assigned Policy Document</h5>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-normal">
+                          Status: <span className="text-teal-700 dark:text-teal-400 font-normal">{existingDoc.status}</span> • Updated: {existingDoc.updatedAt ? new Date(existingDoc.updatedAt).toLocaleDateString() : 'N/A'}
+                      </p>
+                  </div>
+                  <div className="flex gap-2">
+                      {!isEditingDocument ? (
+                          <button
+                              onClick={() => setIsEditingDocument(true)}
+                              className="text-xs font-normal bg-white dark:bg-gray-750 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-650 px-3 py-1.5 rounded-md text-gray-700 dark:text-gray-200 transition-colors"
+                          >
+                              Edit Document
+                          </button>
+                      ) : (
+                          <button
+                              onClick={handleSaveDocument}
+                              className="text-xs font-normal bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-md transition-colors"
+                          >
+                              Save Changes
+                          </button>
+                      )}
+                      
+                      {isEditingDocument && (
+                          <button
+                              onClick={() => {
+                                  setIsEditingDocument(false);
+                                  localStorage.removeItem(`grc_autosave_${control.id}`);
+                                  setHasAutosavedSession(false);
+                              }}
+                              className="text-xs font-normal bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-650 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-md transition-colors"
+                          >
+                              Cancel
+                          </button>
+                      )}
+                  </div>
+              </div>
+
+              {hasAutosavedSession && !isEditingDocument && (
+                  <div 
+                    className="bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900 rounded-lg p-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-3" 
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                      <div>
+                          <span className="font-normal text-amber-800 dark:text-amber-400">Unsaved auto-save session detected</span>
+                          <p className="text-gray-500 dark:text-gray-400 mt-0.5 font-normal">Would you like to restore or discard your previous edit session?</p>
+                      </div>
+                      <div className="flex gap-2 self-end sm:self-auto">
+                          <button
+                              onClick={handleLoadAutosave}
+                              className="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 rounded font-normal transition-colors"
+                          >
+                              Restore
+                          </button>
+                          <button
+                              onClick={handleDiscardAutosave}
+                              className="bg-white hover:bg-gray-100 dark:bg-gray-750 dark:hover:bg-gray-700 text-gray-705 dark:text-gray-300 border border-gray-200 dark:border-gray-650 px-2.5 py-1 rounded font-normal transition-colors"
+                          >
+                              Discard
+                          </button>
+                      </div>
+                  </div>
+              )}
+
+              <div onClick={(e) => e.stopPropagation()}>
+                  {!isEditingDocument ? (
+                      <div className="space-y-4">
+                          {existingDoc.content?.policy && (
+                              <div className="space-y-1">
+                                  <h6 className="text-xs font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wide">1. Policy Statement</h6>
+                                  <div className="bg-gray-50/60 dark:bg-gray-900/20 p-3 rounded-md text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-normal whitespace-pre-wrap">
+                                      {existingDoc.content.policy}
+                                  </div>
+                              </div>
+                          )}
+                          
+                          {existingDoc.content?.procedure && (
+                              <div className="space-y-1">
+                                  <h6 className="text-xs font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wide">2. Mandated Procedures</h6>
+                                  <div className="bg-gray-50/60 dark:bg-gray-900/20 p-3 rounded-md text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-normal whitespace-pre-wrap">
+                                      {existingDoc.content.procedure}
+                                  </div>
+                              </div>
+                          )}
+
+                          {existingDoc.content?.guideline && (
+                              <div className="space-y-1">
+                                  <h6 className="text-xs font-normal text-gray-500 dark:text-gray-400 uppercase tracking-wide">3. Implementation Guidelines</h6>
+                                  <div className="bg-gray-50/60 dark:bg-gray-900/20 p-3 rounded-md text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-normal whitespace-pre-wrap">
+                                      {existingDoc.content.guideline}
+                                  </div>
+                              </div>
+                          )}
+                      </div>
+                  ) : (
+                      <div className="space-y-4">
+                          {lastSavedTime && (
+                              <p className="text-xs font-normal text-green-650 dark:text-green-400 flex items-center gap-1.5 font-sans">
+                                  <span>●</span> Auto-saved at {lastSavedTime} (30s interval)
+                              </p>
+                          )}
+                          
+                          <div className="space-y-2">
+                              <label className="block text-xs font-normal text-gray-650 dark:text-gray-400 uppercase tracking-wider">1. Policy Statement</label>
+                              <textarea
+                                  value={editPolicy}
+                                  onChange={(e) => setEditPolicy(e.target.value)}
+                                  rows={5}
+                                  className="w-full text-sm p-3 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg text-gray-900 dark:text-white font-normal focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                                  placeholder="Write policy statement content..."
+                              ></textarea>
+                          </div>
+
+                          <div className="space-y-2">
+                              <label className="block text-xs font-normal text-gray-650 dark:text-gray-400 uppercase tracking-wider">2. Mandated Procedures</label>
+                              <textarea
+                                  value={editProcedure}
+                                  onChange={(e) => setEditProcedure(e.target.value)}
+                                  rows={5}
+                                  className="w-full text-sm p-3 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg text-gray-900 dark:text-white font-normal focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                                  placeholder="Write mandated procedures content..."
+                              ></textarea>
+                          </div>
+
+                          <div className="space-y-2">
+                              <label className="block text-xs font-normal text-gray-650 dark:text-gray-400 uppercase tracking-wider">3. Implementation Guidelines</label>
+                              <textarea
+                                  value={editGuideline}
+                                  onChange={(e) => setEditGuideline(e.target.value)}
+                                  rows={5}
+                                  className="w-full text-sm p-3 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg text-gray-900 dark:text-white font-normal focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                                  placeholder="Write guideline content..."
+                              ></textarea>
+                          </div>
+                          
+                          <div className="flex justify-end pt-2">
+                              <button
+                                  onClick={handleSaveDocument}
+                                  className="text-xs font-normal bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md transition-colors"
+                              >
+                                  Save Policy & Clear Backup
+                              </button>
+                          </div>
+                      </div>
+                  )}
+              </div>
+          </div>
+        )}
       </div>
 
        {control.history && control.history.length > 0 && (

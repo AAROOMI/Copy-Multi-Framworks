@@ -15,9 +15,10 @@ interface ContentViewProps {
   documentRepository: PolicyDocument[];
   permissions: Set<Permission>;
   onSetView: (view: View) => void;
+  onUpdateDocument?: (doc: PolicyDocument) => void;
 }
 
-export const ContentView: React.FC<ContentViewProps> = ({ domain, activeControlId, setActiveControlId, onAddDocument, onGeneratePolicyWithAI, onBatchGenerate, documentRepository, permissions, onSetView }) => {
+export const ContentView: React.FC<ContentViewProps> = ({ domain, activeControlId, setActiveControlId, onAddDocument, onGeneratePolicyWithAI, onBatchGenerate, documentRepository, permissions, onSetView, onUpdateDocument }) => {
   const activeHierarchy = useMemo(() => {
     if (!activeControlId) return null;
     for (const subdomain of domain.subdomains) {
@@ -95,6 +96,7 @@ export const ContentView: React.FC<ContentViewProps> = ({ domain, activeControlI
             onGeneratePolicyWithAI={onGeneratePolicyWithAI}
             documentRepository={documentRepository}
             permissions={permissions}
+            onUpdateDocument={onUpdateDocument}
           />
         ))}
       </div>

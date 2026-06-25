@@ -27,6 +27,7 @@ import { AssetInventoryPage } from './components/AssetInventoryPage';
 import { VirtualDepartmentPage } from './components/VirtualDepartmentPage';
 import { MeetingRoomPage } from './components/MeetingRoomPage';
 import { MultiplayerWhiteboard } from './components/MultiplayerWhiteboard';
+import { CreatorMarketplace } from './components/CreatorMarketplace';
 import { DidEmbed } from './components/DidEmbed';
 import { LiveAssistantWidget } from './components/LiveAssistantWidget';
 import { SparklesIcon } from './components/Icons';
@@ -37,12 +38,17 @@ import { TrainingAssistant } from './components/TrainingAssistant';
 import { RiskAssistant } from './components/RiskAssistant';
 import { BreadcrumbReferenceSheet } from './components/BreadcrumbReferenceSheet';
 import { AccordionShowcase } from './components/AccordionShowcase';
+import { GemmaEnginePage } from './components/GemmaEnginePage';
+import { SuperTestAgentPage } from './components/SuperTestAgentPage';
+import { useAdminSessionTimeout } from './components/useAdminSessionTimeout';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { useAiOrchestrator } from './hooks/useAiOrchestrator';
 import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { eccData } from './data/controls';
 import { dbAPI } from './db';
 import { virtualAgents } from './data/virtualAgents';
+import { translations } from './translations';
 import { 
   rolePermissions, 
   type User, 
@@ -71,10 +77,25 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [company, setCompany] = useState<CompanyProfile | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [currentView, setCurrentView] = useState<View>(() => {
+    if (window.location.pathname === '/admin/dashboard') {
+      return 'superAdmin';
+    }
+    return 'creatorMarketplace';
+  });
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   const [isOnline, setIsOnline] = useState(window.navigator.onLine);
+  const [language, setLanguage] = useState<'en' | 'ar'>(() => {
+    return (localStorage.getItem('app_lang') as 'en' | 'ar') || 'en';
+  });
+
+  useEffect(() => {
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+  }, [language]);
+
   
   // Data State
   const [documents, setDocuments] = useState<PolicyDocument[]>([]);
@@ -108,6 +129,9 @@ export default function App() {
 
   // Computed Permissions
   const permissions = useMemo(() => {
+    if (currentUser?.isSuperUser) {
+      return new Set(rolePermissions['Super Admin']);
+    }
     return new Set(currentUser ? rolePermissions[currentUser.role] : []);
   }, [currentUser]);
 
@@ -120,46 +144,77 @@ export default function App() {
     
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsLoading(true);
-      if (firebaseUser) {
-        let user = await dbAPI.getUser(firebaseUser.uid);
-        if (!user) {
-          // Create default profile if missing during refresh
-          user = {
-            id: firebaseUser.uid,
-            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-            email: firebaseUser.email || '',
-            role: (firebaseUser.email === 'aaroomi@gmail.com' || firebaseUser.email === 'aerummi@gmail.com') ? 'Super Admin' : 'Security Analyst',
-            isVerified: true,
-            companyId: 'demo-company',
-            mfaEnabled: false
-          };
-          await dbAPI.createUser(user, 'demo-company');
-        }
+      try {
+        if (firebaseUser) {
+          let user = await dbAPI.getUser(firebaseUser.uid, firebaseUser.email || undefined);
+          if (!user) {
+            // Create default profile if missing during refresh
+            user = {
+              id: firebaseUser.uid,
+              name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+              email: firebaseUser.email || '',
+              role: firebaseUser.email === 'aaroomi@gmail.com' ? 'internal_admin' : (firebaseUser.email === 'aerummi@gmail.com' ? 'Super Admin' : 'Security Analyst'),
+              isVerified: true,
+              companyId: 'demo-company',
+              mfaEnabled: false
+            };
+            try {
+              await dbAPI.createUser(user, 'demo-company');
+            } catch (err) {
+              console.error("Failed to auto-create user profile:", err);
+            }
+          }
 
-        if (user) {
-          // ADMIN OVERRIDE
-          if (user.email === 'aaroomi@gmail.com' || user.email === 'aerummi@gmail.com') {
-            user.role = 'Super Admin';
+          if (user) {
+            // ADMIN OVERRIDE
+            if (user.email === 'aaroomi@gmail.com') {
+              user.role = 'internal_admin';
+            } else if (user.email === 'aerummi@gmail.com') {
+              user.role = 'Super Admin';
+            }
+            
+            if (user.mfaEnabled) {
+              setPendingMfaUser(user);
+              setShowMfaVerify(true);
+            } else {
+              await loadCompanyData(user);
+              if (user.role === 'Super Admin' || user.role === 'internal_admin') {
+                setCurrentView('superAdmin');
+                if (window.location.pathname !== '/admin/dashboard') {
+                  window.history.pushState({}, "", "/admin/dashboard");
+                }
+                console.log("Authenticated User:", user.email);
+                console.log("Role:", user.role);
+                console.log("Redirecting to:", "/admin/dashboard");
+                console.log("Session:", auth.currentUser);
+              }
+            }
           }
-          
-          if (user.mfaEnabled) {
-            setPendingMfaUser(user);
-            setShowMfaVerify(true);
-          } else {
-            await loadCompanyData(user);
-          }
-        }
-      } else {
-        // Fallback for simulated super admin session
-        const silentUser = await dbAPI.loginUser('', ''); // Trigger silent check (includes simulation)
-        if (silentUser) {
-            await loadCompanyData(silentUser);
         } else {
-            setCurrentUser(null);
-            setCompany(null);
+          // Fallback for simulated super admin session
+          const silentUser = await dbAPI.loginUser('', ''); // Trigger silent check (includes simulation)
+          if (silentUser) {
+              await loadCompanyData(silentUser);
+              if (silentUser.role === 'Super Admin' || silentUser.role === 'internal_admin') {
+                  setCurrentView('superAdmin');
+                  if (window.location.pathname !== '/admin/dashboard') {
+                    window.history.pushState({}, "", "/admin/dashboard");
+                  }
+                  console.log("Authenticated User:", silentUser.email);
+                  console.log("Role:", silentUser.role);
+                  console.log("Redirecting to:", "/admin/dashboard");
+                  console.log("Session:", auth.currentUser);
+              }
+          } else {
+              setCurrentUser(null);
+              setCompany(null);
+          }
         }
+      } catch (authErr) {
+        console.error("Error in onAuthStateChanged wrapper:", authErr);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => {
@@ -168,6 +223,48 @@ export default function App() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Routing sync from view and pathname + Protected Route Access Guards
+  useEffect(() => {
+    const handleNavigationSecurity = () => {
+      const path = window.location.pathname;
+      if (currentUser) {
+        if (currentUser.role === 'internal_admin' || currentUser.role === 'Super Admin' || currentUser.email === 'aaroomi@gmail.com') {
+          // Rule: If internal_admin/Super Admin, force redirect to /admin/dashboard
+          if (currentView !== 'superAdmin') {
+            setCurrentView('superAdmin');
+          }
+          if (path !== '/admin/dashboard') {
+            window.history.pushState({}, "", "/admin/dashboard");
+          }
+        } else {
+          // Rule: If a normal user tries to access /admin/dashboard, force redirect to home and dashboard view
+          if (path === '/admin/dashboard') {
+            window.history.pushState({}, "", "/");
+            setCurrentView('dashboard');
+          }
+        }
+      }
+    };
+    handleNavigationSecurity();
+    window.addEventListener('popstate', handleNavigationSecurity);
+    return () => window.removeEventListener('popstate', handleNavigationSecurity);
+  }, [currentUser, currentView, isLoading]);
+
+  // Synchronize URL from view state changes
+  useEffect(() => {
+    if (currentView === 'superAdmin') {
+      if (window.location.pathname !== '/admin/dashboard') {
+        window.history.pushState({}, "", "/admin/dashboard");
+      }
+    } else {
+      // Only redirect /admin/dashboard to / if the current user is NOT an admin
+      const isAdmin = currentUser?.role === 'Super Admin' || currentUser?.role === 'internal_admin' || currentUser?.email === 'aaroomi@gmail.com';
+      if (window.location.pathname === '/admin/dashboard' && !isAdmin && !isLoading) {
+        window.history.pushState({}, "", "/");
+      }
+    }
+  }, [currentView, currentUser, isLoading]);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -180,14 +277,8 @@ export default function App() {
   const loadCompanyData = async (user: User) => {
     // Fallback for Super Admin if companyId is missing, or for specific user
     let effectiveCompanyId = user.companyId;
-    if (!effectiveCompanyId && (user.role === 'Super Admin' || user.email === 'aaroomi@gmail.com' || user.email === 'aerummi@gmail.com')) {
+    if (!effectiveCompanyId || user.role === 'Super Admin' || user.role === 'internal_admin' || user.email === 'aaroomi@gmail.com' || user.email === 'aerummi@gmail.com') {
       effectiveCompanyId = 'demo-company';
-    }
-
-    if (!effectiveCompanyId) {
-      setCurrentUser(user);
-      setIsLoading(false);
-      return;
     }
 
     try {
@@ -245,6 +336,61 @@ export default function App() {
     setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 5000);
   };
 
+  const {
+    isOnline: aiOrchestratorOnline,
+    isOfflineActive,
+    queueAuditLog,
+    syncOfflineLogs
+  } = useAiOrchestrator(
+    company?.id,
+    addNotification,
+    (syncedLogs) => {
+      setAuditLog(prev => {
+        const existingIds = new Set(prev.map(l => l.id));
+        const filteredSynced = syncedLogs.filter(l => !existingIds.has(l.id));
+        return [...filteredSynced, ...prev];
+      });
+    }
+  );
+
+  useEffect(() => {
+    setIsOnline(aiOrchestratorOnline && !isOfflineActive);
+  }, [aiOrchestratorOnline, isOfflineActive]);
+
+  // Monitor the tasks state and trigger automatic notifications for stale high-priority pending/todo tasks
+  const notifiedTasksRef = React.useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!tasks || tasks.length === 0) return;
+
+    tasks.forEach(task => {
+      // High-priority checks (either priority property is 'high'/'High', or title/description mentions it)
+      const isHighPriority = 
+        (task as any).priority === 'high' || 
+        (task as any).priority === 'High' ||
+        String(task.title || '').toLowerCase().includes('high priority') ||
+        String(task.title || '').toLowerCase().includes('[high]') ||
+        (task as any).description && String((task as any).description || '').toLowerCase().includes('high priority');
+
+      // Status checks: 'Pending' or 'To Do'
+      const isPending = task.status === 'Pending' || task.status === 'To Do';
+
+      // Age checks: 48 hours is 172800000 ms
+      const ageMs = Date.now() - task.createdAt;
+      const isStale = ageMs > 172800000;
+
+      if (isHighPriority && isPending && isStale) {
+        if (!notifiedTasksRef.current.has(task.id)) {
+          notifiedTasksRef.current.add(task.id);
+          addNotification(
+            `Escalation Alert: High-priority task "${task.title}" has remained in Pending status for over 48 hours!`,
+            'error'
+          );
+        }
+      }
+    });
+  }, [tasks]);
+
   const handleAddAuditLog = (action: AuditAction, details: string, targetId?: string) => {
     if (!currentUser || !company) return;
     const entry = {
@@ -257,7 +403,11 @@ export default function App() {
         targetId
     };
     setAuditLog(prev => [entry, ...prev]);
-    dbAPI.addAuditLog(company.id, entry);
+    if (isOfflineActive) {
+        queueAuditLog(entry);
+    } else {
+        dbAPI.addAuditLog(company.id, entry);
+    }
   };
 
   // --- Auth Handlers ---
@@ -283,13 +433,18 @@ export default function App() {
                 return null;
             }
             
-            // For real Firebase users, onAuthStateChanged will trigger and load data.
-            // For simulated sessions, we MUST call loadCompanyData here.
-            if (!auth.currentUser) {
-                await loadCompanyData(user);
-            } else if (auth.currentUser.uid !== user.id) {
-                // If there's a mismatch or delay, load it just in case
-                await loadCompanyData(user);
+            // Unconditionally load company data immediately during login to guarantee matching state and avoid race conditions
+            await loadCompanyData(user);
+
+            if (user.role === 'Super Admin' || user.role === 'internal_admin') {
+                setCurrentView('superAdmin');
+                if (window.location.pathname !== '/admin/dashboard') {
+                  window.history.pushState({}, "", "/admin/dashboard");
+                }
+                console.log("Authenticated User:", user.email);
+                console.log("Role:", user.role);
+                console.log("Redirecting to:", "/admin/dashboard");
+                console.log("Session:", auth.currentUser);
             }
             
             handleAddAuditLog('USER_LOGIN', `User ${user.email} logged in.`);
@@ -367,6 +522,9 @@ export default function App() {
     setShowMfaVerify(false);
     setCurrentView('dashboard');
   };
+
+  // Automated admin inactivity detection & session management
+  useAdminSessionTimeout(currentUser, handleLogout, addNotification);
 
   const handleSetupCompany = async (profileData: any, adminData: any) => {
       // Temporary license
@@ -483,6 +641,13 @@ export default function App() {
       }));
   };
 
+  const handleUpdateDocument = (updatedDoc: PolicyDocument) => {
+      if (!company) return;
+      setDocuments(prev => prev.map(doc => doc.id === updatedDoc.id ? updatedDoc : doc));
+      dbAPI.updateDocument(company.id, updatedDoc);
+      handleAddAuditLog('DOCUMENT_UPDATED', `Document updated for ${updatedDoc.controlId}`);
+  };
+
   // --- Render ---
 
   if (isLoading) {
@@ -539,13 +704,15 @@ export default function App() {
         onSetView={setCurrentView}
         permissions={permissions}
         trainingProgress={trainingProgress}
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
       />
       
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Top Header */}
         <header className="glass-panel border-white/5 h-[58px] m-4 mb-0 flex justify-between items-center px-6 shadow-2xl z-20">
             <div className="flex items-center gap-4">
-                <button onClick={() => {}} className="md:hidden p-2 rounded-md hover:bg-white/10 text-white/70">
+                <button onClick={() => setIsMobileSidebarOpen(true)} className="md:hidden p-2 rounded-md hover:bg-white/10 text-white/70">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
                 <div className="flex flex-col">
@@ -646,6 +813,7 @@ export default function App() {
                     documentRepository={documents}
                     permissions={permissions}
                     onSetView={setCurrentView}
+                    onUpdateDocument={handleUpdateDocument}
                 />
             )}
             {currentView === 'documents' && (
@@ -846,7 +1014,7 @@ export default function App() {
                     }}
                 />
             )}
-            {currentView === 'superAdmin' && <SuperAdminPage currentUser={currentUser} />}
+            {currentView === 'superAdmin' && <SuperAdminPage currentUser={currentUser} auditLog={auditLog} />}
             {currentView === 'integrations' && (
                 <IntegrationsPage 
                     onAddRisk={(category, risk) => {
@@ -879,8 +1047,11 @@ export default function App() {
             )}
             {currentView === 'virtualMeeting' && <MeetingRoomPage />}
             {currentView === 'whiteboard' && <MultiplayerWhiteboard />}
+            {currentView === 'creatorMarketplace' && <CreatorMarketplace />}
             {currentView === 'breadcrumbDesign' && <BreadcrumbReferenceSheet />}
             {currentView === 'accordionDesign' && <AccordionShowcase />}
+            {currentView === 'gemmaEngine' && <GemmaEnginePage />}
+            {currentView === 'superTestAgent' && <SuperTestAgentPage />}
                     {currentView === 'virtualDepartment' && (
                         <VirtualDepartmentPage
                             onDelegateTask={(agentName, task) => {
@@ -901,6 +1072,8 @@ export default function App() {
                             onAddDocument={(doc) => { setDocuments(p => [...p, doc]); dbAPI.saveDocument(company.id, doc); }}
                             onAddRisk={(risk) => { setRisks(p => [...p, risk]); dbAPI.addRisk(company.id, risk); }}
                             onAddAuditLog={handleAddAuditLog}
+                            auditLog={auditLog}
+                            language={language}
                         />
                     )}
                 </div>

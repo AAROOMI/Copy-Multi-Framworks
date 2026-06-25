@@ -285,7 +285,7 @@ const ExportableDocumentContent: React.FC<{ doc: PolicyDocument, company: Compan
             <DocumentHeader doc={doc} company={company} />
             
             <div className="mb-10">
-                <h1 className="text-3xl font-normal mb-2 text-gray-900 uppercase tracking-tight">Policy Document</h1>
+                <h1 className="text-lg font-normal mb-2 text-gray-900 uppercase tracking-tight">Policy Document</h1>
                 <p className="text-sm text-gray-600 border-b-2 border-teal-600 pb-4 mb-6 inline-block pr-12">
                     {doc.domainName} <span className="text-teal-600 mx-2">/</span> {doc.subdomainTitle}
                 </p>
@@ -408,48 +408,69 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({ doc, onClose,
     const handleDownloadWord = async () => {
         const exportElement = await prepareExportableElement(doc);
         if (!exportElement) return;
-
-        const htmlToDocx = (window as any).htmlToDocx;
-
-        if (typeof htmlToDocx !== 'function') {
-            console.error('htmlToDocx function not found. The library may not be loaded.');
-            alert('Error: Word export functionality is unavailable.');
-            cleanupExportableElement(exportElement);
-            return;
-        }
         
-        // Note: html-to-docx might struggle with canvas elements (QR/Barcode). 
-        // A full solution would convert canvas to img tags dataURIs before passing to htmlToDocx.
+        // Convert canvas elements (QR/Barcode) to image data URIs
         const canvasElements = exportElement.querySelectorAll('canvas');
         canvasElements.forEach(canvas => {
             const img = document.createElement('img');
             img.src = canvas.toDataURL();
-            // Set dimensions explicitly for word
             img.width = canvas.width / 2; 
             img.height = canvas.height / 2;
             canvas.parentNode?.replaceChild(img, canvas);
         });
         
-        const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Policy ${doc.controlId}</title></head><body>${exportElement.innerHTML}</body></html>`;
-        
+        const htmlContent = exportElement.innerHTML;
         cleanupExportableElement(exportElement);
 
         try {
-            const fileBuffer = await htmlToDocx(htmlContent, undefined, {
-                footer: true,
-                pageNumber: true,
-            });
+            const docHtml = `
+              <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+                    xmlns:w="urn:schemas-microsoft-com:office:word" 
+                    xmlns="http://www.w3.org/TR/REC-html40">
+              <head>
+                <meta charset="utf-8">
+                <title>Policy ${doc.controlId}</title>
+                <!--[if gte mso 9]>
+                <xml>
+                  <w:WordDocument>
+                    <w:View>Print</w:View>
+                    <w:Zoom>100</w:Zoom>
+                    <w:DoNotOptimizeForBrowser/>
+                  </w:WordDocument>
+                </xml>
+                <![endif]-->
+                <style>
+                  body {
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333333;
+                    margin: 1in;
+                  }
+                  h1 { font-size: 24pt; color: #0d9488; font-weight: normal; margin-bottom: 12pt; }
+                  h2 { font-size: 18pt; color: #0f172a; font-weight: normal; margin-top: 18pt; margin-bottom: 6pt; }
+                  h3 { font-size: 14pt; color: #1e293b; font-weight: normal; margin-top: 14pt; margin-bottom: 4pt; }
+                  p, li { font-size: 11pt; margin-bottom: 6pt; }
+                  table { width: 100%; border-collapse: collapse; margin-top: 12pt; margin-bottom: 12pt; }
+                  th, td { border: 1px solid #cbd5e1; padding: 8pt; text-align: left; font-size: 10pt; }
+                  th { background-color: #f1f5f9; font-weight: bold; }
+                </style>
+              </head>
+              <body>
+                ${htmlContent}
+              </body>
+              </html>
+            `;
 
-            const blob = new Blob([fileBuffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            const blob = new Blob(['\ufeff' + docHtml], { type: 'application/msword' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `policy-${doc.controlId}.docx`;
+            link.download = `policy-${doc.controlId}.doc`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
         } catch (error) {
-            console.error('Error generating DOCX file:', error);
+            console.error('Error generating Word file:', error);
             alert('An error occurred while generating the Word document.');
         }
     };

@@ -1,10 +1,9 @@
 {
-  "projectId": "metaworks-7cfc5",
-  "appId": "1:496821664990:web:2660aef71ff04c6a9ad64f",
-  "apiKey": "AIzaSyDtmPHHhtxIh0HsDTVqWYnUbX8Y5Asa-Jo",
-  "authDomain": "metaworks-7cfc5.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-73cf7d61-0509-47fe-8c22-5a71456a8565",
-  "storageBucket": "metaworks-7cfc5.firebasestorage.app",
-  "messagingSenderId": "496821664990",
-  "measurementId": ""
+  "projectId": "multi-framework-41f74",
+  "appId": "1:263462033110:web:89d47f60471970b495db77",
+  "apiKey": "AIzaSyAjnWHySRf4FWlOWhcpw4yfs6d6rIIV2UA",
+  "authDomain": "multi-framework-41f74.firebaseapp.com",
+  "storageBucket": "multi-framework-41f74.firebasestorage.app",
+  "messagingSenderId": "263462033110",
+  "measurementId": "G-VTK2QV6CPH"
 }

@@ -45,7 +45,7 @@ export const MfaVerifyPage: React.FC<MfaVerifyPageProps> = ({ user, onVerify, on
         </div>
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
             <LogoIcon className="mx-auto h-16 w-auto text-teal-600" />
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
+            <h2 className="mt-6 text-center text-lg font-normal text-gray-900 dark:text-gray-100">
                 Two-Factor Authentication
             </h2>
              <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
